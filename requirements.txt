@@ -1,0 +1,21 @@
+# Core & Utilities
+python-dotenv>=1.0.0
+pydantic>=2.6.0
+requests>=2.31.0
+tqdm>=4.66.0
+
+# Kafka
+kafka-python-ng>=2.2.2
+
+# Database & Warehouse
+psycopg2-binary>=2.9.9
+sqlalchemy>=2.0.25
+
+# Spark & Processing
+pyspark==3.5.2
+
+# Transformations
+dbt-postgres>=1.7.0
+
+# Supabase (Cloud Sync)
+supabase>=2.3.0

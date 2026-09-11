@@ -1,0 +1,146 @@
+x-airflow-common: &airflow-common
+  image: apache/airflow:2.9.1-python3.11
+  environment:
+    - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+    - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${AIRFLOW_DB:-airflow}
+    - AIRFLOW__CORE__FERNET_KEY=${AIRFLOW__CORE__FERNET_KEY:-46BKJoQYlPPOexq0OhDZnIlNepKFf87WFwLbfzqJZq0=}
+    - AIRFLOW__CORE__LOAD_EXAMPLES=false
+    - AIRFLOW__CORE__LOGGING_LEVEL=INFO
+    - AIRFLOW__WEBSERVER__EXPOSE_CONFIG=true
+  volumes:
+    - ./orchestration/dags:/opt/airflow/dags
+    - ./orchestration/logs:/opt/airflow/logs
+    - ./orchestration/plugins:/opt/airflow/plugins
+    - ./ingestion:/opt/airflow/ingestion
+    - ./transform:/opt/airflow/transform
+    - ./sync:/opt/airflow/sync
+    - ./.env:/opt/airflow/.env:ro
+  depends_on:
+    postgres:
+      condition: service_healthy
+
+services:
+  # -------------------------------------------------------------
+  # PostgreSQL (Data Warehouse + Airflow Metadata)
+  # -------------------------------------------------------------
+  postgres:
+    image: postgres:15-alpine
+    container_name: aviate_postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_MULTIPLE_DATABASES: ${POSTGRES_DB:-aviate_dw},${AIRFLOW_DB:-airflow}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init_databases.sh:/docker-entrypoint-initdb.d/init_databases.sh
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - aviate_network
+
+  # -------------------------------------------------------------
+  # Apache Spark (Official Image: Master + Worker)
+  # -------------------------------------------------------------
+  spark-master:
+    image: apache/spark:3.5.2
+    container_name: aviate_spark_master
+    hostname: spark-master
+    environment:
+      - SPARK_MASTER_PORT=7077
+      - SPARK_MASTER_WEBUI_PORT=8080
+      - POSTGRES_HOST=postgres
+    command: /opt/spark/bin/spark-class org.apache.spark.deploy.master.Master
+    ports:
+      - "8081:8080"   # Spark Master Web UI
+      - "7077:7077"   # Spark Master Port
+    volumes:
+      - ./processing:/opt/spark/work-dir/processing
+      - ./data:/opt/spark/work-dir/data
+      - ./ingestion:/opt/spark/work-dir/ingestion
+    networks:
+      - aviate_network
+
+  spark-worker:
+    image: apache/spark:3.5.2
+    container_name: aviate_spark_worker
+    depends_on:
+      - spark-master
+    command: /opt/spark/bin/spark-class org.apache.spark.deploy.worker.Worker spark://spark-master:7077
+    environment:
+      - SPARK_WORKER_CORES=2
+      - SPARK_WORKER_MEMORY=2g
+      - POSTGRES_HOST=postgres
+    volumes:
+      - ./processing:/opt/spark/work-dir/processing
+      - ./data:/opt/spark/work-dir/data
+      - ./ingestion:/opt/spark/work-dir/ingestion
+    networks:
+      - aviate_network
+
+  # -------------------------------------------------------------
+  # Apache Airflow (Init, Webserver, Scheduler)
+  # -------------------------------------------------------------
+  airflow-init:
+    <<: *airflow-common
+    container_name: aviate_airflow_init
+    entrypoint: /bin/bash
+    command:
+      - -c
+      - |
+        airflow db migrate &&
+        airflow users create \
+          --username admin \
+          --firstname Aviate \
+          --lastname Admin \
+          --role Admin \
+          --email admin@aviate.local \
+          --password admin || true
+    networks:
+      - aviate_network
+
+  airflow-webserver:
+    <<: *airflow-common
+    container_name: aviate_airflow_webserver
+    restart: always
+    command: webserver
+    ports:
+      - "8085:8080"   # Airflow Web UI
+    depends_on:
+      airflow-init:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    networks:
+      - aviate_network
+
+  airflow-scheduler:
+    <<: *airflow-common
+    container_name: aviate_airflow_scheduler
+    restart: always
+    command: scheduler
+    depends_on:
+      airflow-init:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD-SHELL", 'airflow jobs check --job-type SchedulerJob --hostname "$${HOSTNAME}"']
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    networks:
+      - aviate_network
+
+networks:
+  aviate_network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local
