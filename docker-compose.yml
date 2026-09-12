@@ -14,6 +14,8 @@ x-airflow-common: &airflow-common
     - ./ingestion:/opt/airflow/ingestion
     - ./transform:/opt/airflow/transform
     - ./sync:/opt/airflow/sync
+    - ./processing:/opt/airflow/processing
+    - ./data:/opt/airflow/data
     - ./.env:/opt/airflow/.env:ro
   depends_on:
     postgres:

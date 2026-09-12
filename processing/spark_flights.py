@@ -1,5 +1,6 @@
 import argparse
 import sys
+import psycopg2
 from pathlib import Path
 
 from pyspark.sql import SparkSession
@@ -17,7 +18,7 @@ def get_spark_session(app_name: str = "AviateSparkBatch") -> SparkSession:
         .config("spark.jars.packages", "org.postgresql:postgresql:42.6.0") \
         .getOrCreate()
 
-def process_and_load(spark: SparkSession, filename: str):
+def process_and_load(spark: SparkSession, filename: str, period: str):
     filepath = str(RAW_DIR / filename)
     logger.info(f"Reading raw file from {filepath}")
     
@@ -78,6 +79,22 @@ def process_and_load(spark: SparkSession, filename: str):
     
     # 4. Load to Postgres using JDBC
     jdbc_url = f"jdbc:postgresql://{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DB}"
+    
+    logger.info(f"Deleting existing records for period {period} to ensure idempotency...")
+    conn = psycopg2.connect(
+        host=POSTGRES_HOST,
+        port=POSTGRES_PORT,
+        dbname=POSTGRES_DB,
+        user=POSTGRES_USER,
+        password=POSTGRES_PASSWORD
+    )
+    conn.autocommit = True
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM raw_flights WHERE TO_CHAR(flight_date, 'YYYY-MM') = %s", (period,))
+    cursor.close()
+    conn.close()
+    logger.info(f"Deleted existing records for {period}.")
+
     logger.info(f"Loading data into PostgreSQL table 'raw_flights' at {jdbc_url}")
     
     df.write \
@@ -95,11 +112,12 @@ def process_and_load(spark: SparkSession, filename: str):
 def main():
     parser = argparse.ArgumentParser(description="Process BTS flight data with Spark")
     parser.add_argument("--file", required=True, help="Filename inside data/raw/")
+    parser.add_argument("--period", required=True, help="Period (e.g. 2023-01)")
     args = parser.parse_args()
     
     spark = get_spark_session()
     try:
-        process_and_load(spark, args.file)
+        process_and_load(spark, args.file, args.period)
     finally:
         spark.stop()
 

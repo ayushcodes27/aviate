@@ -1,0 +1,31 @@
+version: 2
+
+models:
+  - name: stg_flights
+    columns:
+      - name: flight_date
+        tests:
+          - not_null
+      - name: carrier
+        tests:
+          - not_null
+      - name: origin
+        tests:
+          - not_null
+      - name: dest
+        tests:
+          - not_null
+
+  - name: mart_airline_performance
+    columns:
+      - name: carrier
+        tests:
+          - unique
+          - not_null
+
+  - name: mart_airport_performance
+    columns:
+      - name: airport_code
+        tests:
+          - unique
+          - not_null
