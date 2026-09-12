@@ -14,9 +14,7 @@ default_args = {
 
 # Define a dictionary or list of historical periods and files
 BACKFILL_PERIODS = {
-    "2023-01": "T_ONTIME_MARKETING_2023_1.csv",
-    "2023-02": "T_ONTIME_MARKETING_2023_2.csv",
-    "2023-03": "T_ONTIME_MARKETING_2023_3.csv"
+    "2023-Q1": "flights_sample_3m.csv"
 }
 
 with DAG(
@@ -28,26 +26,45 @@ with DAG(
     catchup=False,
 ) as dag:
 
+    PG_ENV = {
+        "POSTGRES_HOST": "postgres",
+        "POSTGRES_USER": "postgres",
+        "POSTGRES_PASSWORD": "postgres",
+        "POSTGRES_DB": "aviate_dw",
+    }
+
     start = EmptyOperator(task_id='start')
     end = EmptyOperator(task_id='end')
 
     dbt_build = BashOperator(
         task_id='dbt_build_all',
-        bash_command='cd /opt/airflow/transform && dbt build --profiles-dir /opt/airflow/transform',
-        env={"POSTGRES_HOST": "postgres", "POSTGRES_USER": "postgres", "POSTGRES_PASSWORD": "postgres", "POSTGRES_DB": "aviate_dw"}
+        bash_command='cd /opt/airflow/transform && /home/airflow/.local/bin/dbt build --profiles-dir /opt/airflow/transform',
+        env=PG_ENV,
+        append_env=True,
     )
 
     for period, filename in BACKFILL_PERIODS.items():
         download_data = BashOperator(
             task_id=f'download_bts_data_{period}',
-            bash_command=f'python /opt/airflow/ingestion/download_bts.py --file {filename} --period {period}'
+            bash_command=f'python /opt/airflow/ingestion/download_bts.py --file {filename} --period {period}',
+            env=PG_ENV,
+            append_env=True,
         )
 
         spark_process = BashOperator(
             task_id=f'spark_process_{period}',
-            bash_command=f'python /opt/airflow/processing/spark_flights.py --file {filename} --period {period}'
+            bash_command=f'python /opt/airflow/processing/spark_flights.py --file {filename} --period {period}',
+            env=PG_ENV,
+            append_env=True,
         )
 
         start >> download_data >> spark_process >> dbt_build
     
-    dbt_build >> end
+    publish_marts = BashOperator(
+        task_id='publish_marts',
+        bash_command='python /opt/airflow/sync/publish_marts.py',
+        env=PG_ENV,
+        append_env=True,
+    )
+
+    dbt_build >> publish_marts >> end

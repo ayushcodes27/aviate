@@ -2,7 +2,7 @@ import argparse
 import hashlib
 import json
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from config import RAW_DIR, logger
 
@@ -35,7 +35,7 @@ def register_file(filename: str, period: str):
     manifest_data[period] = {
         "filename": filename,
         "checksum": checksum,
-        "registered_at": datetime.now(datetime.UTC).isoformat(),
+        "registered_at": datetime.now(timezone.utc).isoformat(),
         "source": "BTS TranStats"
     }
     

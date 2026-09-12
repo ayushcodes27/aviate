@@ -43,6 +43,11 @@ with DAG(
         env={"POSTGRES_HOST": "postgres", "POSTGRES_USER": "postgres", "POSTGRES_PASSWORD": "postgres", "POSTGRES_DB": "aviate_dw"}
     )
 
+    publish_marts = BashOperator(
+        task_id='publish_marts',
+        bash_command='python /opt/airflow/sync/publish_marts.py'
+    )
+
     end = EmptyOperator(task_id='end')
 
-    start >> download_data >> spark_process >> dbt_build >> end
+    start >> download_data >> spark_process >> dbt_build >> publish_marts >> end

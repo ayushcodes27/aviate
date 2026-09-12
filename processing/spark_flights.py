@@ -26,8 +26,6 @@ def process_and_load(spark: SparkSession, filename: str, period: str):
     df = spark.read.csv(filepath, header=True, inferSchema=True)
     
     # 1. Select and rename columns to match our raw_flights schema
-    # Note: Column names in BTS CSV can vary slightly, assuming standard ones for now.
-    # Adjust these mappings based on the actual CSV headers.
     col_mapping = {
         "FL_DATE": "flight_date",
         "AIRLINE": "carrier",
@@ -55,11 +53,20 @@ def process_and_load(spark: SparkSession, filename: str, period: str):
     valid_cols = list(col_mapping.values())
     df = df.select([c for c in df.columns if c in valid_cols])
     
+    # Cast types to match Postgres schema
+    # flight_date -> date, numeric columns -> integer
+    df = df.withColumn("flight_date", col("flight_date").cast(DateType()))
+    int_cols = ["dep_time", "dep_delay", "arr_time", "arr_delay",
+                "cancelled", "diverted", "carrier_delay", "weather_delay",
+                "nas_delay", "security_delay", "late_aircraft_delay"]
+    for c_name in int_cols:
+        if c_name in df.columns:
+            df = df.withColumn(c_name, col(c_name).cast(IntegerType()))
+    
     # Add ingestion timestamp
     df = df.withColumn("_ingested_at", current_timestamp())
     
     # 2. Quality Validation
-    # Required columns should not be null
     required_cols = ["flight_date", "carrier", "origin", "dest"]
     for c in required_cols:
         if c in df.columns:
@@ -75,12 +82,18 @@ def process_and_load(spark: SparkSession, filename: str, period: str):
     # 3. Write Parquet to Processed zone
     parquet_path = str(PROCESSED_DIR / filename.replace(".csv", ".parquet"))
     logger.info(f"Writing to parquet: {parquet_path}")
-    df.write.mode("overwrite").parquet(parquet_path)
+    # Use a temp path then rename to avoid "unable to clear" errors on rerun
+    import shutil
+    temp_parquet = parquet_path + "_tmp"
+    shutil.rmtree(temp_parquet, ignore_errors=True)
+    shutil.rmtree(parquet_path, ignore_errors=True)
+    df.write.mode("overwrite").parquet(temp_parquet)
+    shutil.move(temp_parquet, parquet_path)
     
     # 4. Load to Postgres using JDBC
     jdbc_url = f"jdbc:postgresql://{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DB}"
     
-    logger.info(f"Deleting existing records for period {period} to ensure idempotency...")
+    logger.info(f"Clearing raw_flights table before loading period {period}...")
     conn = psycopg2.connect(
         host=POSTGRES_HOST,
         port=POSTGRES_PORT,
@@ -90,10 +103,10 @@ def process_and_load(spark: SparkSession, filename: str, period: str):
     )
     conn.autocommit = True
     cursor = conn.cursor()
-    cursor.execute("DELETE FROM raw_flights WHERE TO_CHAR(flight_date, 'YYYY-MM') = %s", (period,))
+    cursor.execute("TRUNCATE TABLE raw_flights")
     cursor.close()
     conn.close()
-    logger.info(f"Deleted existing records for {period}.")
+    logger.info("Truncated raw_flights table.")
 
     logger.info(f"Loading data into PostgreSQL table 'raw_flights' at {jdbc_url}")
     
