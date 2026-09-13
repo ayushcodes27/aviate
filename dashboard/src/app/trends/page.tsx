@@ -1,6 +1,7 @@
 import { supabase } from '@/lib/supabase';
 import DailyTrendsLine from '@/components/charts/DailyTrendsLine';
 import DelayCausesStackedArea from '@/components/charts/DelayCausesStackedArea';
+import DataTable from '@/components/DataTable';
 
 export const revalidate = 3600;
 
@@ -35,48 +36,29 @@ export default async function Trends({ searchParams }: { searchParams: { range?:
     console.error("Supabase fetch error:", err);
   }
 
+  const columns = [
+    { header: "Date", accessorKey: "flight_date", render: (row: any) => <strong>{row.flight_date}</strong> },
+    { header: "Total Delayed", accessorKey: "total_delayed_flights", isNumeric: true, render: (row: any) => row.total_delayed_flights?.toLocaleString() },
+    { header: "Total Cancelled", accessorKey: "total_cancelled_flights", isNumeric: true, render: (row: any) => row.total_cancelled_flights?.toLocaleString() },
+    { header: "Avg Daily Delay (m)", accessorKey: "avg_daily_delay", isNumeric: true, render: (row: any) => row.avg_daily_delay ? row.avg_daily_delay.toFixed(1) : '-' }
+  ];
+
   return (
     <div className="container animate-fade-in">
       <h1>Delay Trends</h1>
-      <p style={{ marginBottom: '2rem' }}>Summary of delayed and cancelled flights across the selected time period.</p>
+      <p style={{ marginBottom: '1rem' }}>Summary of delayed and cancelled flights across the selected time period.</p>
       
-      <div className="card" style={{ marginBottom: '2rem' }}>
+      <div className="panel" style={{ marginBottom: '1rem' }}>
         <h2>Daily Delays & Cancellations</h2>
         <DailyTrendsLine data={trends} />
       </div>
 
-      <div className="card" style={{ marginBottom: '2rem' }}>
+      <div className="panel" style={{ marginBottom: '1rem' }}>
         <h2>Delay Cause Breakdown</h2>
         <DelayCausesStackedArea data={causes} />
       </div>
       
-      <div className="table-container">
-        <table>
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Total Delayed</th>
-              <th>Total Cancelled</th>
-              <th>Avg Daily Delay (m)</th>
-            </tr>
-          </thead>
-          <tbody>
-            {trends?.map((trend: any) => (
-              <tr key={trend.flight_date}>
-                <td><strong>{trend.flight_date}</strong></td>
-                <td>{trend.total_delayed_flights?.toLocaleString()}</td>
-                <td>{trend.total_cancelled_flights?.toLocaleString()}</td>
-                <td>{trend.avg_daily_delay ? trend.avg_daily_delay.toFixed(1) : '-'}</td>
-              </tr>
-            ))}
-            {!trends?.length && (
-              <tr>
-                <td colSpan={4} style={{ textAlign: 'center', padding: '2rem' }}>No data available. Please sync from Airflow.</td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+      <DataTable columns={columns} data={trends} />
     </div>
   );
 }

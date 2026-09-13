@@ -1,19 +1,26 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-
 :root {
-  --background: #f8fafc;
-  --surface: #ffffff;
-  --surface-hover: #f1f5f9;
-  --primary: #2563eb;
-  --primary-glow: rgba(37, 99, 235, 0.15);
-  --secondary: #7c3aed;
-  --text-primary: #0f172a;
-  --text-secondary: #475569;
-  --text-muted: #94a3b8;
-  --border: #e2e8f0;
-  --success: #059669;
-  --error: #dc2626;
-  --warning: #d97706;
+  --bg-page: #F7F8F9;
+  --bg-panel: #FFFFFF;
+  --border-hairline: #E4E7EB;
+  --text-ink: #1A2233;
+  --text-muted: #5B6472;
+  --accent-blue: #2E5AAC;
+  --accent-green: #2F7A4F;
+  --accent-amber: #B7791F;
+  --accent-red: #B23A34;
+
+  /* Legacy mappings (so existing unrefactored components don't break during transition) */
+  --background: var(--bg-page);
+  --surface: var(--bg-panel);
+  --surface-hover: var(--bg-page);
+  --primary: var(--accent-blue);
+  --secondary: var(--text-muted);
+  --text-primary: var(--text-ink);
+  --text-secondary: var(--text-muted);
+  --border: var(--border-hairline);
+  --success: var(--accent-green);
+  --warning: var(--accent-amber);
+  --error: var(--accent-red);
 }
 
 * {
@@ -23,9 +30,9 @@
 }
 
 body {
-  background-color: var(--background);
-  color: var(--text-primary);
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  background-color: var(--bg-page);
+  color: var(--text-ink);
+  font-family: var(--font-plex-sans), sans-serif;
   line-height: 1.5;
   min-height: 100vh;
 }
@@ -39,28 +46,23 @@ a {
 .container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 2rem;
+  padding: 1.5rem 2rem 2rem; /* 24px top */
 }
 
-/* Glassmorphism Cards */
-.card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 1.5rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+/* Panels (formerly Cards) */
+.panel, .card {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-hairline);
+  border-radius: 6px;
+  padding: 1rem; /* 16px internal padding */
+  box-shadow: none; /* No shadow */
 }
 
-.card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 0 15px var(--primary-glow);
-}
-
+/* Legacy hero-card override (kill gradients) */
 .hero-card {
-  background: linear-gradient(to bottom right, #f0fdf4, #ffffff);
-  border: 1px solid #bbf7d0;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  background: var(--bg-panel);
+  border: 1px solid var(--border-hairline);
+  box-shadow: none;
 }
 
 .status-badge {
@@ -78,14 +80,14 @@ a {
 
 /* Typography */
 h1 {
-  font-size: 2.5rem;
-  font-weight: 700;
+  font-size: 1.5rem; /* 24px */
+  font-weight: 500;
   color: var(--text-primary);
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.25rem;
 }
 
 h2 {
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   font-weight: 600;
   margin-bottom: 1rem;
 }
@@ -97,7 +99,7 @@ p {
 /* Flex & Grid */
 .grid {
   display: grid;
-  gap: 1.5rem;
+  gap: 1rem; /* 16px gap between panels */
 }
 
 .grid-cols-2 { grid-template-columns: repeat(2, 1fr); }

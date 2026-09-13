@@ -31,11 +31,12 @@ export default function FlightStatusDonut({ data }: { data: any[] }) {
           data={chartData}
           cx="50%"
           cy="50%"
-          innerRadius={80}
-          outerRadius={110}
-          paddingAngle={5}
+          innerRadius={60}
+          outerRadius={80}
+          paddingAngle={2}
           dataKey="value"
-          stroke="none"
+          stroke="var(--bg-panel)"
+          strokeWidth={2}
         >
           {chartData.map((entry, index) => (
             <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />

@@ -14,8 +14,8 @@ export default function AirportDelayScatter({ data }: { data: any[] }) {
 
   return (
     <ResponsiveContainer width="100%" height={300}>
-      <ScatterChart margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+      <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 30 }}>
+        <CartesianGrid strokeDasharray="3 3" stroke="var(--border-hairline)" />
         <XAxis 
           type="number" 
           dataKey="depDelay" 
@@ -37,25 +37,14 @@ export default function AirportDelayScatter({ data }: { data: any[] }) {
         <ZAxis type="number" dataKey="volume" range={[200, 1000]} name="Volume" />
         <Tooltip 
           cursor={{ strokeDasharray: '3 3' }} 
-          contentStyle={{ backgroundColor: 'var(--surface)', borderColor: 'var(--border)', borderRadius: '8px', color: 'var(--text-primary)' }}
-          formatter={(value: number, name: string) => [
-            name === 'Volume' ? new Intl.NumberFormat('en-US').format(value) : `${value.toFixed(1)} mins`, 
-            name
-          ]}
+          contentStyle={{ borderRadius: '4px', border: '1px solid var(--border-hairline)', boxShadow: 'none' }}
+          formatter={(value: number, name: string) => [value.toFixed(1), name === 'x' ? 'Avg Dep Delay (m)' : 'Avg Arr Delay (m)']}
         />
-        {/* y=x reference line */}
+        <Scatter name="Airports" data={chartData} fill="var(--text-ink)" />
         <ReferenceLine 
-          segment={[{ x: -10, y: -10 }, { x: 60, y: 60 }]} 
-          stroke="var(--text-muted)" 
-          strokeDasharray="3 3" 
-          label={{ position: 'top', value: 'Dep = Arr Delay', fill: 'var(--text-muted)', fontSize: 12 }} 
-        />
-        <Scatter 
-          name="Airports" 
-          data={chartData} 
-          fill="var(--secondary)" 
-          fillOpacity={0.8}
-          activeShape={{ fill: 'var(--primary)', stroke: 'var(--surface)', strokeWidth: 2 }}
+          segment={[{ x: -20, y: -20 }, { x: 60, y: 60 }]} 
+          stroke="var(--border-hairline)" 
+          strokeDasharray="3 3"
         />
       </ScatterChart>
     </ResponsiveContainer>

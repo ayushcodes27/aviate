@@ -12,7 +12,9 @@ export default function ReliabilityBarChart({ data }: { data: any[] }) {
     if (score >= 84.5) return 'var(--success)';
     if (score >= 82) return '#84cc16'; // lime/yellow-green
     if (score >= 80) return 'var(--warning)';
-    return 'var(--error)';
+    if (score >= 84.5) return 'var(--accent-green)';
+    if (score >= 80) return 'var(--accent-amber)';
+    return 'var(--accent-red)';
   };
 
   const minScore = chartData.length > 0 ? Math.min(...chartData.map(d => d.reliability_score)) : 0;
@@ -37,7 +39,7 @@ export default function ReliabilityBarChart({ data }: { data: any[] }) {
         />
         <Tooltip 
           cursor={{ fill: 'var(--surface-hover)' }}
-          contentStyle={{ backgroundColor: 'var(--surface)', borderColor: 'var(--border)', borderRadius: '8px' }}
+          contentStyle={{ backgroundColor: 'var(--surface)', borderColor: 'var(--border)', borderRadius: '8px', boxShadow: 'none' }}
           formatter={(value: number) => [`${value.toFixed(1)}%`, 'Reliability']}
         />
         <Bar dataKey="reliability_score" radius={[0, 4, 4, 0]}>

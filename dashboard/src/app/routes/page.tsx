@@ -1,5 +1,7 @@
 import { supabase } from '@/lib/supabase';
 import RouteDelayBar from '@/components/charts/RouteDelayBar';
+import RoutesTable from './RoutesTable';
+import Link from 'next/link';
 
 export default async function Routes({ searchParams }: { searchParams: { range?: string, carrier?: string } }) {
   const range = (await searchParams)?.range || 'all';
@@ -50,53 +52,47 @@ export default async function Routes({ searchParams }: { searchParams: { range?:
     console.error("Supabase fetch error:", err);
   }
 
+  const clearFilterHref = range !== 'all' ? `?range=${range}` : `?`;
+
   return (
     <div className="container animate-fade-in">
-      <h1>Route Performance</h1>
-      <p style={{ marginBottom: '2rem' }}>Analysis of flight routes, highlighting the worst offenders by delay rate (minimum 100 flights).</p>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.25rem' }}>
+            <h1 style={{ marginBottom: 0 }}>Route Performance</h1>
+            {carrier && (
+              <Link 
+                href={clearFilterHref}
+                style={{ 
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  padding: '0.25rem 0.5rem',
+                  border: '1px solid var(--border-hairline)',
+                  borderRadius: '4px',
+                  fontSize: '0.875rem',
+                  color: 'var(--text-ink)',
+                  backgroundColor: 'var(--bg-panel)'
+                }}
+              >
+                {carrier} <span style={{ color: 'var(--text-muted)' }}>×</span>
+              </Link>
+            )}
+          </div>
+          <p style={{ color: 'var(--text-muted)', margin: 0 }}>Analysis of flight routes, highlighting the worst offenders by delay rate.</p>
+        </div>
+        <div style={{ fontSize: '12px', padding: '6px 10px', background: 'var(--bg-page)', border: '1px solid var(--border-hairline)', borderRadius: '4px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <span style={{ display: 'inline-block', width: '6px', height: '6px', borderRadius: '50%', background: 'var(--accent-green)' }}></span>
+          Powered by <code style={{ color: 'var(--text-ink)', background: 'var(--border-hairline)', padding: '2px 4px', borderRadius: '2px' }}>mart_route_reliability</code>
+        </div>
+      </div>
       
-      <div className="card" style={{ marginBottom: '2rem' }}>
+      <div className="panel" style={{ marginBottom: '1rem' }}>
         <h2>Worst Routes by Delay Rate</h2>
         <RouteDelayBar data={routes} />
       </div>
       
-      <div className="table-container">
-        <table>
-          <thead>
-            <tr>
-              <th>Origin</th>
-              <th>Destination</th>
-              <th>Carrier</th>
-              <th>Total Flights</th>
-              <th>Delay Rate</th>
-              <th>Cancel Rate</th>
-              <th>Avg Route Delay (m)</th>
-            </tr>
-          </thead>
-          <tbody>
-            {routes?.map((route: any, index: number) => (
-              <tr key={`${route.origin}-${route.dest}-${route.carrier}-${index}`}>
-                <td><strong>{route.origin}</strong></td>
-                <td><strong>{route.dest}</strong></td>
-                <td>{route.carrier}</td>
-                <td>{route.route_flights?.toLocaleString()}</td>
-                <td style={{ color: route.delay_rate > 20 ? 'var(--error)' : 'inherit' }}>
-                  {route.delay_rate ? `${route.delay_rate.toFixed(1)}%` : '-'}
-                </td>
-                <td style={{ color: route.cancellation_rate > 5 ? 'var(--error)' : 'inherit' }}>
-                  {route.cancellation_rate ? `${route.cancellation_rate.toFixed(1)}%` : '-'}
-                </td>
-                <td>{route.avg_route_delay ? route.avg_route_delay.toFixed(1) : '-'}</td>
-              </tr>
-            ))}
-            {!routes?.length && (
-              <tr>
-                <td colSpan={7} style={{ textAlign: 'center', padding: '2rem' }}>No data available. Please sync from Airflow.</td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+      <RoutesTable data={routes} />
     </div>
   );
 }

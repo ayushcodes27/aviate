@@ -25,14 +25,12 @@ export default function DelayVsCancelGroupedBar({ data }: { data: any[] }) {
           tickFormatter={(value) => new Intl.NumberFormat('en-US', { notation: "compact", compactDisplay: "short" }).format(value)}
         />
         <Tooltip 
-          cursor={{ fill: 'var(--surface-hover)' }}
-          contentStyle={{ backgroundColor: 'var(--surface)', borderColor: 'var(--border)', borderRadius: '8px', color: 'var(--text-primary)' }}
-          labelFormatter={(label, payload) => payload?.[0]?.payload?.fullName || label}
-          formatter={(value: number) => new Intl.NumberFormat('en-US').format(value)}
+          cursor={{ fill: 'rgba(0,0,0,0.05)' }}
+          contentStyle={{ borderRadius: '4px', border: '1px solid var(--border-hairline)', boxShadow: 'none' }}
         />
         <Legend wrapperStyle={{ paddingTop: '10px' }} />
-        <Bar dataKey="delayed" name="Delayed" fill="var(--warning)" radius={[4, 4, 0, 0]} />
-        <Bar dataKey="cancelled" name="Cancelled" fill="var(--error)" radius={[4, 4, 0, 0]} />
+        <Bar dataKey="delayed" name="Delayed Flights" fill="var(--accent-amber)" radius={[2, 2, 0, 0]} />
+        <Bar dataKey="cancelled" name="Cancelled Flights" fill="var(--accent-red)" radius={[2, 2, 0, 0]} />
       </BarChart>
     </ResponsiveContainer>
   );

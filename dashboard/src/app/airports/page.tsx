@@ -1,14 +1,20 @@
 import { supabase } from '@/lib/supabase';
 import BusiestAirportsBar from '@/components/charts/BusiestAirportsBar';
 import AirportDelayScatter from '@/components/charts/AirportDelayScatter';
+import AirportsTable from './AirportsTable';
+import Link from 'next/link';
 
-export default async function Airports({ searchParams }: { searchParams: { range?: string } }) {
+export default async function Airports({ searchParams }: { searchParams: { range?: string, airport?: string } }) {
   const range = (await searchParams)?.range || 'all';
+  const airport = (await searchParams)?.airport;
   let airports: any[] = [];
   try {
     let query = supabase.from('mart_airport_performance').select('*');
     if (range !== 'all') {
       query = query.gte('flight_month', `${range}-01-01`).lte('flight_month', `${range}-12-31`);
+    }
+    if (airport) {
+      query = query.eq('airport_code', airport);
     }
     const { data } = await query;
     if (data) {
@@ -45,53 +51,53 @@ export default async function Airports({ searchParams }: { searchParams: { range
     console.error("Supabase fetch error:", err);
   }
 
+  const clearFilterHref = range !== 'all' ? `?range=${range}` : `?`;
+
   return (
     <div className="container animate-fade-in">
-      <h1>Airport Operations</h1>
-      <p style={{ marginBottom: '2rem' }}>Departure and arrival metrics by airport (Top 50 by volume).</p>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.25rem' }}>
+            <h1 style={{ marginBottom: 0 }}>Airport Operations</h1>
+            {airport && (
+              <Link 
+                href={clearFilterHref}
+                style={{ 
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  padding: '0.25rem 0.5rem',
+                  border: '1px solid var(--border-hairline)',
+                  borderRadius: '4px',
+                  fontSize: '0.875rem',
+                  color: 'var(--text-ink)',
+                  backgroundColor: 'var(--bg-panel)'
+                }}
+              >
+                {airport} <span style={{ color: 'var(--text-muted)' }}>×</span>
+              </Link>
+            )}
+          </div>
+          <p style={{ color: 'var(--text-muted)', margin: 0 }}>Departure and arrival metrics by airport (Top 50 by volume).</p>
+        </div>
+        <div style={{ fontSize: '12px', padding: '6px 10px', background: 'var(--bg-page)', border: '1px solid var(--border-hairline)', borderRadius: '4px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <span style={{ display: 'inline-block', width: '6px', height: '6px', borderRadius: '50%', background: 'var(--accent-green)' }}></span>
+          Powered by <code style={{ color: 'var(--text-ink)', background: 'var(--border-hairline)', padding: '2px 4px', borderRadius: '2px' }}>mart_airport_performance</code> &middot; 2 tests passed
+        </div>
+      </div>
       
-      <div className="grid grid-cols-2" style={{ marginBottom: '2rem' }}>
-        <div className="card">
+      <div className="grid grid-cols-2" style={{ marginBottom: '1rem' }}>
+        <div className="panel">
           <h2>Busiest Airports</h2>
           <BusiestAirportsBar data={airports} />
         </div>
-        <div className="card">
+        <div className="panel">
           <h2>Dep Delay vs Arr Delay</h2>
           <AirportDelayScatter data={airports} />
         </div>
       </div>
       
-      <div className="table-container">
-        <table>
-          <thead>
-            <tr>
-              <th>Airport Code</th>
-              <th>Departures</th>
-              <th>Arrivals</th>
-              <th>Avg Dep Delay (m)</th>
-              <th>Avg Arr Delay (m)</th>
-              <th>Total Cancellations</th>
-            </tr>
-          </thead>
-          <tbody>
-            {airports?.map((airport: any) => (
-              <tr key={airport.airport_code}>
-                <td><strong>{airport.airport_code}</strong></td>
-                <td>{airport.total_departures?.toLocaleString()}</td>
-                <td>{airport.total_arrivals?.toLocaleString()}</td>
-                <td>{airport.avg_departure_delay ? airport.avg_departure_delay.toFixed(1) : '-'}</td>
-                <td>{airport.avg_arrival_delay ? airport.avg_arrival_delay.toFixed(1) : '-'}</td>
-                <td>{airport.total_cancellations?.toLocaleString()}</td>
-              </tr>
-            ))}
-            {!airports?.length && (
-              <tr>
-                <td colSpan={6} style={{ textAlign: 'center', padding: '2rem' }}>No data available. Please sync from Airflow.</td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+      <AirportsTable data={airports} />
     </div>
   );
 }
