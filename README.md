@@ -1,7 +1,186 @@
-# Aviate - Flight Operations Analytics Platform
+# Aviate — Flight Operations Analytics Platform
 
-Welcome to the Aviate data pipeline repository. 
+[![Next.js](https://img.shields.io/badge/Next.js-15.0-black?style=flat-square&logo=next.js)](https://nextjs.org/)
+[![Apache Spark](https://img.shields.io/badge/Apache_Spark-3.5.2-E25A1C?style=flat-square&logo=apachespark)](https://spark.apache.org/)
+[![dbt Core](https://img.shields.io/badge/dbt_Core-1.12-FF694B?style=flat-square&logo=dbt)](https://www.getdbt.com/)
+[![Apache Airflow](https://img.shields.io/badge/Apache_Airflow-2.8.1-017CEE?style=flat-square&logo=apacheairflow)](https://airflow.apache.org/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-336791?style=flat-square&logo=postgresql)](https://www.postgresql.org/)
+[![Supabase](https://img.shields.io/badge/Supabase-Cloud_DW-3ECF8E?style=flat-square&logo=supabase)](https://supabase.com/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178C6?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
 
-This project is a historical flight-operations analytics platform that incrementally ingests U.S. flight records, models delay and reliability metrics with Spark and dbt, orchestrates refreshes with Airflow, and serves an interactive Next.js dashboard deployed on Vercel.
+**Aviate** is an enterprise-grade historical flight operations intelligence platform. It processes over **6.4 million commercial flight records** (2019–2023) from the Bureau of Transportation Statistics (BTS), orchestrating distributed PySpark ingestion, dbt analytical transformations, and automated quality testing to power an interactive Next.js operations dashboard.
 
-**For full architecture details, build plans, and schema notes, please refer to the [Project Guide](aviate_project_guide.md).**
+---
+
+##  Dashboard Showcase
+
+### 1. Operations Overview & System-Wide KPIs
+High-level operational health monitoring with unboxed Hero KPI metrics (On-time rate, Cancellation rate, Average delay), 4-way status breakdown donut, and multi-year delay trajectories.
+
+![Flight Operations Overview](dashboard/pics/Overview.png)
+
+---
+
+### 2. Airline Performance & Reliability Leaderboard
+Comprehensive rankings of 58 US commercial air carriers sorted by operational reliability score, accompanied by a dual-metric delay vs. cancellation comparative analysis.
+
+![Airline Performance](dashboard/pics/Airlines.png)
+
+---
+
+### 3. Airport Operations & Hub Congestion Matrix
+Interactive 4-quadrant scatter matrix categorizing 350+ US airports into operational profiles (*Systemic Bottleneck*, *Destination Congestion*, *En-Route Recovery*, *Baseline Efficiency*) with dynamic pseudo-heatmap density scaling and full IATA name hover resolution.
+
+![Airport Operations Scatter Matrix](dashboard/pics/Airport1.png)
+
+Detailed searchable hub operations grid with departures, arrivals, delay offsets, and cancellation counts:
+
+![Airport Operations Table](dashboard/pics/Airport2.png)
+
+---
+
+### 4. Route Performance & Corridor Reliability
+Origin-destination corridor analytics identifying the highest-risk flight routes, delay distributions, and carrier market allocations.
+
+![Route Performance](dashboard/pics/Routes.png)
+
+---
+
+### 5. Historical Trends & Causal Decomposition
+Longitudinal time-series analysis with authentic historical event annotations (*COVID-19 travel restrictions*, *Summer 2022 ATC staffing*, *Winter Storm Elliott*) paired with a stacked causal area breakdown (Carrier, Late Aircraft, NAS, Weather, Security).
+
+![Daily Trends & Milestones](dashboard/pics/trends1.png)
+![Delay Cause Breakdown](dashboard/pics/trends2.png)
+
+---
+
+##  Architecture & Data Pipeline
+
+```
+┌─────────────────────────┐
+│ Bureau of Transportation│
+│    Statistics (BTS)     │
+│   (6.4M Flight CSVs)    │
+└────────────┬────────────┘
+             │
+             ▼
+┌─────────────────────────┐
+│     Apache Airflow      │  ◄── DAG Orchestration & Scheduling
+└────────────┬────────────┘
+             │
+             ▼
+┌─────────────────────────┐
+│      Apache Spark       │  ◄── Distributed Cleaning, Schema Enforcement,
+│        (PySpark)        │      Deduplication & Type Casting
+└────────────┬────────────┘
+             │
+             ▼
+┌─────────────────────────┐
+│    PostgreSQL (DW)      │  ◄── High-Throughput Bulk Staging Warehouse
+└────────────┬────────────┘
+             │
+             ▼
+┌─────────────────────────┐
+│        dbt Core         │  ◄── 5 Dimensional Analytical Marts +
+│   (Postgres Adapter)    │      8 Data Quality Tests
+└────────────┬────────────┘
+             │
+             ▼
+┌─────────────────────────┐
+│  publish_marts (Sync)   │  ◄── Batched Cloud Synchronization (page_size=5000)
+└────────────┬────────────┘
+             │
+             ▼
+┌─────────────────────────┐
+│   Supabase Cloud DB     │  ◄── Secure Managed Cloud Warehouse
+└────────────┬────────────┘
+             │
+             ▼
+┌─────────────────────────┐
+│     Next.js 15 App      │  ◄── Server Components, Recharts, Custom Design
+│       (Dashboard)       │      Tokens & Tabular Numerals
+└─────────────────────────┘
+```
+
+---
+
+##  Analytical Data Marts (dbt)
+
+The transformation layer produces 5 curated data marts modeled for low-latency querying:
+
+| Mart Name | Granularity | Key Metrics | dbt Tests |
+| :--- | :--- | :--- | :--- |
+| **`mart_airline_performance`** | `carrier`, `flight_month` | Total flights, delayed flights, cancelled flights, avg delay min, reliability score | `unique`, `not_null` |
+| **`mart_airport_performance`** | `airport_code`, `flight_month` | Departures, arrivals, avg departure delay, avg arrival delay, cancellations | `unique`, `not_null` |
+| **`mart_route_reliability`** | `origin`, `dest`, `carrier`, `flight_month` | Corridor flight count, delay rate, cancellation rate, avg corridor delay | `not_null` |
+| **`mart_delay_trends`** | `flight_date` | Daily total flights, delayed flights, cancelled flights, avg daily delay | `unique`, `not_null` |
+| **`mart_delay_causes`** | `carrier`, `flight_month` | Carrier delay, weather delay, NAS delay, security delay, late aircraft delay | `not_null` |
+
+---
+
+##  Technology Stack
+
+| Layer | Technologies | Description |
+| :--- | :--- | :--- |
+| **Distributed Compute** | `Apache Spark 3.5.2`, `PySpark` | Parallel cleaning, schema validation, and null resolution across 6.4M rows |
+| **Orchestration** | `Apache Airflow 2.8+` | Containerized DAG scheduling (`historical_backfill`, `monthly_flight_refresh`) |
+| **Data Transformation** | `dbt Core 1.12+` | SQL modeling, incremental aggregation, and automated testing assertions |
+| **Local Storage** | `PostgreSQL 15` | Staging data warehouse containerized via Docker |
+| **Cloud Storage** | `Supabase` | Managed Cloud PostgreSQL layer serving the dashboard |
+| **Web Dashboard** | `Next.js 15`, `React 19`, `TypeScript` | Server Components, responsive data visualization, and custom design tokens |
+| **Data Visualization** | `Recharts` | Pseudo-heatmap scatter matrices, area charts, and grouped bar visualizations |
+| **Containerization** | `Docker`, `Docker Compose` | Multi-container environment (Airflow, Spark Master/Worker, PostgreSQL) |
+
+---
+
+## 🚀 Quickstart
+
+```bash
+# 1. Clone repo & setup env
+git clone https://github.com/ayushcodes27/flick.git && cd flick
+cp .env.example .env
+
+# 2. Launch infrastructure (Postgres, Airflow, Spark)
+docker compose up -d
+
+# 3. Run PySpark ingestion & dbt transformations
+docker exec -e POSTGRES_HOST=postgres aviate_airflow_scheduler python3 /opt/airflow/processing/spark_flights.py --file flights_sample_3m.csv --period 2023-Q1
+docker exec -e POSTGRES_HOST=postgres aviate_airflow_scheduler bash -c "cd /opt/airflow/transform && dbt build --profiles-dir ."
+
+# 4. Sync marts to Supabase & launch dashboard
+python sync/publish_marts.py
+cd dashboard && npm install && npm run dev
+```
+
+> **Services**: Dashboard (`http://localhost:3000`) • Airflow (`http://localhost:8085` admin/admin) • Spark UI (`http://localhost:8081`) • Postgres (`localhost:5434`)
+
+---
+
+## 📁 Repository Structure
+
+```
+├── dashboard/       # Next.js 15 analytics dashboard & visualization layer
+├── ingestion/       # BTS flight data extraction scripts
+├── orchestration/   # Apache Airflow DAGs (backfill & monthly refresh)
+├── processing/      # PySpark batch cleaning & transformation scripts
+├── sync/            # Cloud data mart synchronization (publish_marts.py)
+├── transform/       # dbt models, data marts & schema tests
+└── docker-compose.yml
+```
+
+---
+
+##  Data Quality & Testing
+
+Data integrity is enforced at every layer of the pipeline:
+1. **PySpark Schema Validation**: Drops orphan flight IDs, enforces UTC timestamp conversion, casts categorical carrier codes, and treats null arrival offsets.
+2. **dbt Assertions**:
+   - `unique` constraints on carrier-month and airport-month combinations.
+   - `not_null` assertions across all primary delay metrics.
+   - Referential integrity checks between staging views and marts.
+3. **Continuous Monitoring**: Pipeline latency, execution duration, and row throughput are tracked via the persistent [Pipeline Architecture](dashboard/src/app/pipeline/page.tsx) monitor.
+
+---
+
+##  License
+This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
