@@ -8,46 +8,46 @@
 [![Supabase](https://img.shields.io/badge/Supabase-Cloud_DW-3ECF8E?style=flat-square&logo=supabase)](https://supabase.com/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178C6?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
 
-**Aviate** is an enterprise-grade historical flight operations intelligence platform. It processes over **6.4 million commercial flight records** (2019–2023) from the Bureau of Transportation Statistics (BTS), orchestrating distributed PySpark ingestion, dbt analytical transformations, and automated quality testing to power an interactive Next.js operations dashboard.
+**Aviate** is an end-to-end data pipeline and analytics dashboard for US commercial flight data from the Bureau of Transportation Statistics (BTS). It processes millions of flight records using Apache Spark and dbt, orchestrates workflows with Airflow, and serves clean performance metrics through a Next.js web application.
 
 ---
 
-##  Dashboard Showcase
+## Dashboard Showcase
 
-### 1. Operations Overview & System-Wide KPIs
-High-level operational health monitoring with unboxed Hero KPI metrics (On-time rate, Cancellation rate, Average delay), 4-way status breakdown donut, and multi-year delay trajectories.
+### 1. Operations Overview
+Key operational metrics including on-time rate, cancellations, average delays, flight status distribution, and multi-year delay trends.
 
 ![Flight Operations Overview](dashboard/pics/Overview.png)
 
 ---
 
-### 2. Airline Performance & Reliability Leaderboard
-Comprehensive rankings of 58 US commercial air carriers sorted by operational reliability score, accompanied by a dual-metric delay vs. cancellation comparative analysis.
+### 2. Airline Performance & Reliability
+Rankings of US commercial air carriers comparing on-time performance, flight volumes, and delays vs. cancellations.
 
 ![Airline Performance](dashboard/pics/Airlines.png)
 
 ---
 
-### 3. Airport Operations & Hub Congestion Matrix
-Interactive 4-quadrant scatter matrix categorizing 350+ US airports into operational profiles (*Systemic Bottleneck*, *Destination Congestion*, *En-Route Recovery*, *Baseline Efficiency*) with dynamic pseudo-heatmap density scaling and full IATA name hover resolution.
+### 3. Airport Operations & Congestion
+Scatter matrix comparing departure vs. arrival delays across 350+ US airports with IATA code resolution and full hub metrics.
 
 ![Airport Operations Scatter Matrix](dashboard/pics/Airport1.png)
 
-Detailed searchable hub operations grid with departures, arrivals, delay offsets, and cancellation counts:
+Searchable airport table with departures, arrivals, average delays, and cancellation rates:
 
 ![Airport Operations Table](dashboard/pics/Airport2.png)
 
 ---
 
 ### 4. Route Performance & Corridor Reliability
-Origin-destination corridor analytics identifying the highest-risk flight routes, delay distributions, and carrier market allocations.
+Corridor analytics identifying route volumes, delay rates, and cancellation frequencies between origin and destination airports.
 
 ![Route Performance](dashboard/pics/Routes.png)
 
 ---
 
-### 5. Historical Trends & Causal Decomposition
-Longitudinal time-series analysis with authentic historical event annotations (*COVID-19 travel restrictions*, *Summer 2022 ATC staffing*, *Winter Storm Elliott*) paired with a stacked causal area breakdown (Carrier, Late Aircraft, NAS, Weather, Security).
+### 5. Historical Trends & Delay Causes
+Time-series tracking of daily delay patterns alongside a categorical breakdown of delay causes (Carrier, Late Aircraft, NAS, Weather, Security).
 
 ![Daily Trends & Milestones](dashboard/pics/trends1.png)
 ![Delay Cause Breakdown](dashboard/pics/trends2.png)
@@ -133,11 +133,11 @@ The transformation layer produces 5 curated data marts modeled for low-latency q
 
 ---
 
-## 🚀 Quickstart
+## Quickstart
 
 ```bash
 # 1. Clone repo & setup env
-git clone https://github.com/ayushcodes27/flick.git && cd flick
+git clone https://github.com/ayushcodes27/aviate.git && cd aviate
 cp .env.example .env
 
 # 2. Launch infrastructure (Postgres, Airflow, Spark)
@@ -156,7 +156,7 @@ cd dashboard && npm install && npm run dev
 
 ---
 
-## 📁 Repository Structure
+## Repository Structure
 
 ```
 ├── dashboard/       # Next.js 15 analytics dashboard & visualization layer
