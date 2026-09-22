@@ -1,7 +1,7 @@
 import { supabase } from '@/lib/supabase';
 import DailyTrendsLine from '@/components/charts/DailyTrendsLine';
 import DelayCausesStackedArea from '@/components/charts/DelayCausesStackedArea';
-import DataTable from '@/components/DataTable';
+import TrendsTable from './TrendsTable';
 
 export const revalidate = 3600;
 
@@ -23,7 +23,7 @@ export default async function Trends({ searchParams }: { searchParams: { range?:
     while (true) {
       let q = supabase.from('mart_delay_causes').select('*').range(offset, offset + 999);
       if (range !== 'all') {
-        q = q.gte('flight_date', `${range}-01-01`).lte('flight_date', `${range}-12-31`);
+        q = q.gte('flight_month', `${range}-01-01`).lte('flight_month', `${range}-12-31`);
       }
       const { data, error } = await q;
       if (error || !data || data.length === 0) break;
@@ -35,13 +35,6 @@ export default async function Trends({ searchParams }: { searchParams: { range?:
   } catch (err) {
     console.error("Supabase fetch error:", err);
   }
-
-  const columns = [
-    { header: "Date", accessorKey: "flight_date", render: (row: any) => <strong>{row.flight_date}</strong> },
-    { header: "Total Delayed", accessorKey: "total_delayed_flights", isNumeric: true, render: (row: any) => row.total_delayed_flights?.toLocaleString() },
-    { header: "Total Cancelled", accessorKey: "total_cancelled_flights", isNumeric: true, render: (row: any) => row.total_cancelled_flights?.toLocaleString() },
-    { header: "Avg Daily Delay (m)", accessorKey: "avg_daily_delay", isNumeric: true, render: (row: any) => row.avg_daily_delay ? row.avg_daily_delay.toFixed(1) : '-' }
-  ];
 
   return (
     <div className="container animate-fade-in">
@@ -58,7 +51,7 @@ export default async function Trends({ searchParams }: { searchParams: { range?:
         <DelayCausesStackedArea data={causes} />
       </div>
       
-      <DataTable columns={columns} data={trends} />
+      <TrendsTable data={trends} />
     </div>
   );
 }

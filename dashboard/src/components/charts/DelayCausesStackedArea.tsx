@@ -5,13 +5,13 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 export default function DelayCausesStackedArea({ data }: { data: any[] }) {
   // Aggregate causes by month
   const monthlyMap = new Map();
-  
+
   data.forEach(row => {
-    if (!row.flight_date) return;
-    const month = row.flight_date.substring(0, 7); // YYYY-MM
+    if (!row.flight_month) return;
+    const month = row.flight_month.substring(0, 7); // YYYY-MM
     if (!monthlyMap.has(month)) {
-      monthlyMap.set(month, { 
-        month, 
+      monthlyMap.set(month, {
+        month,
         carrier: 0,
         weather: 0,
         nas: 0,
@@ -30,30 +30,52 @@ export default function DelayCausesStackedArea({ data }: { data: any[] }) {
   const chartData = Array.from(monthlyMap.values()).sort((a, b) => a.month.localeCompare(b.month));
 
   return (
-    <ResponsiveContainer width="100%" height={300}>
-      <AreaChart data={chartData} margin={{ top: 10, right: 30, left: 10, bottom: 5 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
-        <XAxis 
-          dataKey="month" 
-          stroke="var(--text-muted)" 
-          tick={{ fill: 'var(--text-muted)', fontSize: 12 }} 
-          tickMargin={10}
+    <ResponsiveContainer width="100%" height={320}>
+      <AreaChart data={chartData} margin={{ top: 10, right: 20, left: 10, bottom: 25 }}>
+        <CartesianGrid strokeDasharray="3 3" stroke="var(--border-hairline)" vertical={false} />
+        <XAxis
+          dataKey="month"
+          stroke="var(--text-muted)"
+          tick={{ fill: 'var(--text-muted)', fontSize: 11, angle: -45, textAnchor: 'end' }}
+          tickMargin={12}
+          minTickGap={20}
+          tickFormatter={(val) => {
+            if (!val || typeof val !== 'string') return val;
+            const parts = val.split('-');
+            if (parts.length >= 2) {
+              const year = parts[0].slice(2);
+              const monthIndex = parseInt(parts[1], 10) - 1;
+              const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+              return `${months[monthIndex] || parts[1]} '${year}`;
+            }
+            return val;
+          }}
         />
-        <YAxis 
-          stroke="var(--text-muted)" 
-          tick={{ fill: 'var(--text-muted)', fontSize: 12 }} 
+        <YAxis
+          stroke="var(--text-muted)"
+          tick={{ fill: 'var(--text-muted)', fontSize: 12 }}
           tickFormatter={(value) => new Intl.NumberFormat('en-US', { notation: "compact", compactDisplay: "short" }).format(value)}
         />
-        <Tooltip 
-          contentStyle={{ backgroundColor: 'var(--surface)', borderColor: 'var(--border)', borderRadius: '8px', color: 'var(--text-primary)' }}
-          formatter={(value: number) => new Intl.NumberFormat('en-US').format(value)}
+        <Tooltip
+          contentStyle={{ backgroundColor: 'var(--bg-panel)', borderColor: 'var(--border-hairline)', borderRadius: '4px', color: 'var(--text-ink)', boxShadow: 'none' }}
+          labelFormatter={(label) => {
+            if (!label || typeof label !== 'string') return label;
+            const parts = label.split('-');
+            if (parts.length >= 2) {
+              const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+              const monthIndex = parseInt(parts[1], 10) - 1;
+              return `${months[monthIndex] || parts[1]} ${parts[0]}`;
+            }
+            return label;
+          }}
+          formatter={(value: number) => [`${new Intl.NumberFormat('en-US').format(value)} min`]}
         />
-        <Legend wrapperStyle={{ paddingTop: '10px' }} />
-        <Area type="monotone" dataKey="late_aircraft" stackId="1" name="Late Aircraft" stroke="#8b5cf6" fill="#8b5cf6" />
-        <Area type="monotone" dataKey="nas" stackId="1" name="NAS" stroke="#f59e0b" fill="#f59e0b" />
-        <Area type="monotone" dataKey="carrier" stackId="1" name="Carrier" stroke="#3b82f6" fill="#3b82f6" />
-        <Area type="monotone" dataKey="weather" stackId="1" name="Weather" stroke="#06b6d4" fill="#06b6d4" />
-        <Area type="monotone" dataKey="security" stackId="1" name="Security" stroke="#ef4444" fill="#ef4444" />
+        <Legend verticalAlign="top" align="right" wrapperStyle={{ paddingBottom: '12px', fontSize: '12px' }} />
+        <Area type="monotone" dataKey="late_aircraft" stackId="1" name="Late aircraft" stroke="#7C5AC2" fill="#7C5AC2" fillOpacity={0.8} />
+        <Area type="monotone" dataKey="nas" stackId="1" name="NAS" stroke="var(--status-delayed)" fill="var(--status-delayed)" fillOpacity={0.8} />
+        <Area type="monotone" dataKey="carrier" stackId="1" name="Carrier" stroke="var(--data-primary)" fill="var(--data-primary)" fillOpacity={0.8} />
+        <Area type="monotone" dataKey="weather" stackId="1" name="Weather" stroke="#2E7D9E" fill="#2E7D9E" fillOpacity={0.8} />
+        <Area type="monotone" dataKey="security" stackId="1" name="Security" stroke="var(--status-cancelled)" fill="var(--status-cancelled)" fillOpacity={0.8} />
       </AreaChart>
     </ResponsiveContainer>
   );

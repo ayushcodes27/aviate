@@ -3,17 +3,68 @@
 import React from 'react';
 import Link from 'next/link';
 import DataTable from '@/components/DataTable';
+import { getAirportName } from '@/lib/airports';
 
 export default function RoutesTable({ data }: { data: any[] }) {
-  const delayColor = (rate: number) => {
-    if (rate >= 35) return '#8C2E27';
-    if (rate >= 30) return 'var(--accent-red)';
-    if (rate >= 25) return '#C0562E';
-    return 'var(--accent-amber)';
+  const renderDelayPill = (rate: number) => {
+    if (!rate && rate !== 0) return '-';
+    // WCAG compliant dark crimson & amber tones
+    if (rate >= 30.0) {
+      return (
+        <span style={{ 
+          display: 'inline-flex',
+          padding: '2px 7px',
+          borderRadius: '3px',
+          backgroundColor: 'rgba(153, 27, 27, 0.08)',
+          color: '#991B1B', // Dark crimson - WCAG AAA compliant on white
+          border: '1px solid rgba(153, 27, 27, 0.2)',
+          fontSize: '0.75rem',
+          fontWeight: 600,
+          fontFamily: 'var(--font-plex-mono), monospace'
+        }}>
+          {rate.toFixed(1)}%
+        </span>
+      );
+    } else if (rate >= 20.0) {
+      return (
+        <span style={{ 
+          display: 'inline-flex',
+          padding: '2px 7px',
+          borderRadius: '3px',
+          backgroundColor: 'rgba(180, 83, 9, 0.08)',
+          color: '#B45309', // Dark amber - WCAG compliant
+          border: '1px solid rgba(180, 83, 9, 0.2)',
+          fontSize: '0.75rem',
+          fontWeight: 500,
+          fontFamily: 'var(--font-plex-mono), monospace'
+        }}>
+          {rate.toFixed(1)}%
+        </span>
+      );
+    }
+    return `${rate.toFixed(1)}%`;
   };
 
-  const cancelColor = (rate: number) => {
-    return rate >= 5 ? 'var(--accent-red)' : 'var(--text-ink)';
+  const renderCancelPill = (rate: number) => {
+    if (!rate && rate !== 0) return '-';
+    if (rate >= 5.0) {
+      return (
+        <span style={{ 
+          display: 'inline-flex',
+          padding: '2px 7px',
+          borderRadius: '3px',
+          backgroundColor: 'rgba(153, 27, 27, 0.08)',
+          color: '#991B1B',
+          border: '1px solid rgba(153, 27, 27, 0.2)',
+          fontSize: '0.75rem',
+          fontWeight: 600,
+          fontFamily: 'var(--font-plex-mono), monospace'
+        }}>
+          {rate.toFixed(1)}%
+        </span>
+      );
+    }
+    return `${rate.toFixed(1)}%`;
   };
 
   const columns = [
@@ -21,38 +72,52 @@ export default function RoutesTable({ data }: { data: any[] }) {
       header: "Origin", 
       accessorKey: "origin", 
       render: (row: any) => (
-        <strong>
-          <Link href={`/airports?airport=${encodeURIComponent(row.origin)}`} style={{ color: 'var(--accent-blue)', textDecoration: 'underline', textUnderlineOffset: '4px' }}>
+        <span 
+          title={getAirportName(row.origin)}
+          style={{ 
+            fontWeight: 600, 
+            fontFamily: 'var(--font-plex-mono), monospace',
+            cursor: 'help'
+          }}
+        >
+          <Link href={`/airports?airport=${encodeURIComponent(row.origin)}`} style={{ color: 'var(--data-primary)', textDecoration: 'underline', textUnderlineOffset: '3px' }}>
             {row.origin}
           </Link>
-        </strong>
+        </span>
       ) 
     },
     { 
       header: "Destination", 
       accessorKey: "dest", 
       render: (row: any) => (
-        <strong>
-          <Link href={`/airports?airport=${encodeURIComponent(row.dest)}`} style={{ color: 'var(--accent-blue)', textDecoration: 'underline', textUnderlineOffset: '4px' }}>
+        <span 
+          title={getAirportName(row.dest)}
+          style={{ 
+            fontWeight: 600, 
+            fontFamily: 'var(--font-plex-mono), monospace',
+            cursor: 'help'
+          }}
+        >
+          <Link href={`/airports?airport=${encodeURIComponent(row.dest)}`} style={{ color: 'var(--data-primary)', textDecoration: 'underline', textUnderlineOffset: '3px' }}>
             {row.dest}
           </Link>
-        </strong>
+        </span>
       ) 
     },
-    { header: "Total Flights", accessorKey: "route_flights", isNumeric: true, render: (row: any) => row.route_flights?.toLocaleString() },
+    { header: "Total flights", accessorKey: "route_flights", isNumeric: true, render: (row: any) => row.route_flights?.toLocaleString() },
     { 
-      header: "Delay Rate", 
+      header: "Delay rate", 
       accessorKey: "delay_rate", 
       isNumeric: true, 
-      render: (row: any) => <span style={{ color: delayColor(row.delay_rate) }}>{row.delay_rate ? `${row.delay_rate.toFixed(1)}%` : '-'}</span> 
+      render: (row: any) => renderDelayPill(row.delay_rate)
     },
     { 
-      header: "Cancel Rate", 
+      header: "Cancellation rate", 
       accessorKey: "cancellation_rate", 
       isNumeric: true, 
-      render: (row: any) => <span style={{ color: cancelColor(row.cancellation_rate) }}>{row.cancellation_rate ? `${row.cancellation_rate.toFixed(1)}%` : '-'}</span> 
+      render: (row: any) => renderCancelPill(row.cancellation_rate)
     },
-    { header: "Avg Route Delay (m)", accessorKey: "avg_route_delay", isNumeric: true, render: (row: any) => row.avg_route_delay ? row.avg_route_delay.toFixed(1) : '-' }
+    { header: "Avg route delay (min)", accessorKey: "avg_route_delay", isNumeric: true, render: (row: any) => row.avg_route_delay ? row.avg_route_delay.toFixed(1) : '-' }
   ];
 
   return <DataTable columns={columns} data={data} />;

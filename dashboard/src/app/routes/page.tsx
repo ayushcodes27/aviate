@@ -8,15 +8,22 @@ export default async function Routes({ searchParams }: { searchParams: { range?:
   const carrier = (await searchParams)?.carrier;
   let routes: any[] = [];
   try {
-    let query = supabase.from('mart_route_reliability').select('*');
+    let query = supabase.from('mart_route_reliability')
+      .select('*')
+      .order('route_flights', { ascending: false })
+      .limit(3000);
+
     if (range !== 'all') {
       query = query.gte('flight_month', `${range}-01-01`).lte('flight_month', `${range}-12-31`);
     }
     if (carrier) {
       query = query.eq('carrier', carrier);
     }
-    const { data } = await query;
-    if (data) {
+    const { data, error } = await query;
+    if (error) {
+      console.error("Supabase route error:", error);
+    }
+    if (data && data.length > 0) {
       const agg = new Map<string, any>();
       data.forEach(row => {
         const key = `${row.origin}-${row.dest}`;
@@ -24,6 +31,7 @@ export default async function Routes({ searchParams }: { searchParams: { range?:
           agg.set(key, {
             origin: row.origin,
             dest: row.dest,
+            carrier: row.carrier,
             route_flights: 0,
             delay_rate: 0,
             cancellation_rate: 0,
@@ -31,15 +39,15 @@ export default async function Routes({ searchParams }: { searchParams: { range?:
           });
         }
         const curr = agg.get(key);
-        const flights = Number(row.route_flights || 0);
-        
+        const flights = Number(row.route_flights || row.total_flights || 0);
+
         curr.delay_rate += Number(row.delay_rate || 0) * flights;
         curr.cancellation_rate += Number(row.cancellation_rate || 0) * flights;
         curr.avg_route_delay += Number(row.avg_route_delay || 0) * flights;
         curr.route_flights += flights;
       });
       routes = Array.from(agg.values())
-        .filter(row => row.route_flights >= 100)
+        .filter(row => row.route_flights > 0)
         .map(row => {
           row.delay_rate = row.route_flights > 0 ? row.delay_rate / row.route_flights : 0;
           row.cancellation_rate = row.route_flights > 0 ? row.cancellation_rate / row.route_flights : 0;
@@ -56,39 +64,35 @@ export default async function Routes({ searchParams }: { searchParams: { range?:
 
   return (
     <div className="container animate-fade-in">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.25rem' }}>
-            <h1 style={{ marginBottom: 0 }}>Route Performance</h1>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.25rem' }}>
+            <h1>Route Performance</h1>
             {carrier && (
               <Link 
                 href={clearFilterHref}
                 style={{ 
                   display: 'inline-flex',
                   alignItems: 'center',
-                  gap: '0.5rem',
-                  padding: '0.25rem 0.5rem',
+                  gap: '0.375rem',
+                  padding: '0.2rem 0.5rem',
                   border: '1px solid var(--border-hairline)',
-                  borderRadius: '4px',
-                  fontSize: '0.875rem',
+                  borderRadius: '3px',
+                  fontSize: '0.8125rem',
                   color: 'var(--text-ink)',
                   backgroundColor: 'var(--bg-panel)'
                 }}
               >
-                {carrier} <span style={{ color: 'var(--text-muted)' }}>×</span>
+                {carrier} <span style={{ color: 'var(--text-muted)' }}>&times;</span>
               </Link>
             )}
           </div>
-          <p style={{ color: 'var(--text-muted)', margin: 0 }}>Analysis of flight routes, highlighting the worst offenders by delay rate.</p>
-        </div>
-        <div style={{ fontSize: '12px', padding: '6px 10px', background: 'var(--bg-page)', border: '1px solid var(--border-hairline)', borderRadius: '4px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <span style={{ display: 'inline-block', width: '6px', height: '6px', borderRadius: '50%', background: 'var(--accent-green)' }}></span>
-          Powered by <code style={{ color: 'var(--text-ink)', background: 'var(--border-hairline)', padding: '2px 4px', borderRadius: '2px' }}>mart_route_reliability</code>
+          <p>Origin-to-destination flight corridor reliability and delay rankings.</p>
         </div>
       </div>
       
-      <div className="panel" style={{ marginBottom: '1rem' }}>
-        <h2>Worst Routes by Delay Rate</h2>
+      <div className="panel" style={{ marginBottom: '1.5rem' }}>
+        <h2>Worst routes by delay rate</h2>
         <RouteDelayBar data={routes} />
       </div>
       

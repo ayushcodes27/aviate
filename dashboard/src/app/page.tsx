@@ -4,7 +4,7 @@ import MonthlyDelayArea from '@/components/charts/MonthlyDelayArea';
 import ContextBanner from '@/components/ContextBanner';
 import MetricStrip from '@/components/MetricStrip';
 
-export const revalidate = 3600; // revalidate every hour
+export const revalidate = 3600;
 
 export default async function Home({ searchParams }: { searchParams: { range?: string } }) {
   const range = (await searchParams)?.range || 'all';
@@ -23,10 +23,7 @@ export default async function Home({ searchParams }: { searchParams: { range?: s
       const priorYear = parseInt(range) - 1;
       priorAirlineQuery = priorAirlineQuery.gte('flight_month', `${priorYear}-01-01`).lte('flight_month', `${priorYear}-12-31`);
     } else {
-      // For all time, compare most recent full year (2022) to prior year (2021)
       priorAirlineQuery = priorAirlineQuery.gte('flight_month', '2021-01-01').lte('flight_month', '2021-12-31');
-      // and we need to fetch 2022 data as the 'current' for the diff
-      // we'll filter airlineData in memory for 2022
     }
 
     const [trendRes, airlineRes, priorAirlineRes] = await Promise.all([
@@ -92,36 +89,26 @@ export default async function Home({ searchParams }: { searchParams: { range?: s
   }
 
   const metrics = [
-    { label: "On-Time Performance", value: `${onTimeRate}%`, subtext: "System-wide average", color: "var(--accent-green)" },
-    { label: "Total Cancellations", value: `${cancelRate}%`, subtext: "System-wide rate", color: "var(--accent-red)" },
-    { label: "Avg Delay", value: `${avgDelay} mins`, subtext: "Per delayed flight", color: "var(--accent-amber)" }
+    { label: "On-time performance", value: `${onTimeRate}%`, subtext: "System-wide average", color: "var(--status-ontime)" },
+    { label: "Total cancellations", value: `${cancelRate}%`, subtext: "System-wide cancel rate", color: "var(--status-cancelled)" },
+    { label: "Average delay", value: `${avgDelay} min`, subtext: "Per delayed flight", color: "var(--status-delayed)" }
   ];
 
   return (
     <div className="container animate-fade-in">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
         <div>
-          <h1 style={{ marginBottom: '0.25rem' }}>Flight Operations Overview</h1>
-          <p style={{ color: 'var(--text-muted)', margin: 0 }}>High-level KPI summary of recent flight performance.</p>
+          <h1>Flight Operations Overview</h1>
+          <p>Key operational reliability metrics across US commercial aviation.</p>
         </div>
         
         {/* Scale Callout */}
-        <div 
-          className="panel" 
-          style={{ 
-            padding: '12px 16px', 
-            margin: 0, 
-            display: 'flex', 
-            flexDirection: 'column', 
-            alignItems: 'flex-end',
-            backgroundColor: 'var(--bg-page)'
-          }}
-        >
-          <div style={{ fontSize: '13px', color: 'var(--text-ink)', fontWeight: 500 }}>
-            6.4M flights processed &middot; 58 airlines &middot; 350+ airports
+        <div style={{ textAlign: 'right', fontSize: '12px', color: 'var(--text-muted)' }}>
+          <div style={{ fontWeight: 500, color: 'var(--text-ink)' }}>
+            6.4M flights &middot; 58 carriers &middot; 350+ airports
           </div>
-          <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px', fontFamily: 'var(--font-plex-mono), monospace' }}>
-            PySpark: 3 executors &middot; 4m 12s &middot; 2.1 GB input
+          <div style={{ fontFamily: 'var(--font-plex-mono), monospace', marginTop: '2px', color: 'var(--text-subtle)' }}>
+            PySpark ETL &middot; 2.1 GB dataset
           </div>
         </div>
       </div>
@@ -132,13 +119,13 @@ export default async function Home({ searchParams }: { searchParams: { range?: s
       
       <MetricStrip metrics={metrics} />
       
-      <div className="grid grid-cols-2" style={{ marginBottom: '1rem' }}>
+      <div className="grid grid-cols-2" style={{ marginBottom: '1.5rem' }}>
         <div className="panel">
-          <h2>Flight Status Breakdown</h2>
+          <h2>Flight status breakdown</h2>
           <FlightStatusDonut data={airlineData} />
         </div>
         <div className="panel">
-          <h2>Monthly Delay Trend</h2>
+          <h2>Monthly delay trend</h2>
           <MonthlyDelayArea data={trendData} />
         </div>
       </div>

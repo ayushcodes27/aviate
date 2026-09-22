@@ -53,14 +53,11 @@ export default async function Airlines({ searchParams }: { searchParams: { range
     };
 
     if (currRes.data) {
-      // For "all time", we'll compute 2022 stats vs 2021 stats for the banner
       if (range === 'all') {
-        airlines = aggregateData(currRes.data); // Keep full data for charts/table
+        airlines = aggregateData(currRes.data);
         const data2022 = currRes.data.filter(r => r.flight_month && r.flight_month.startsWith('2022'));
         const airlines2022 = aggregateData(data2022);
         priorAirlines = aggregateData(priorRes.data || []);
-        
-        // We inject the 2022 top ranker info into priorAirlines to be processed later
         (airlines as any)._bannerData = { currentList: airlines2022, priorList: priorAirlines };
       } else {
         airlines = aggregateData(currRes.data);
@@ -81,7 +78,7 @@ export default async function Airlines({ searchParams }: { searchParams: { range
       const priorRankIndex = priorList.findIndex(a => a.carrier === topCarrier.carrier);
       
       if (priorRankIndex !== -1) {
-        const rankDiff = priorRankIndex - 0; // index 0 is rank 1. If prior was index 2 (rank 3), diff is 2.
+        const rankDiff = priorRankIndex - 0;
         contextTrend = rankDiff > 0 ? 'up' : rankDiff < 0 ? 'down' : 'flat';
         
         const changeText = rankDiff > 0 ? `up ${rankDiff} spots` : rankDiff < 0 ? `down ${Math.abs(rankDiff)} spots` : `holding steady`;
@@ -102,28 +99,22 @@ export default async function Airlines({ searchParams }: { searchParams: { range
 
   return (
     <div className="container animate-fade-in">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
-        <div>
-          <h1 style={{ marginBottom: '0.25rem' }}>Airline Performance</h1>
-          <p style={{ color: 'var(--text-muted)', margin: 0 }}>Leaderboard of airlines sorted by operational reliability.</p>
-        </div>
-        <div style={{ fontSize: '12px', padding: '6px 10px', background: 'var(--bg-page)', border: '1px solid var(--border-hairline)', borderRadius: '4px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <span style={{ display: 'inline-block', width: '6px', height: '6px', borderRadius: '50%', background: 'var(--accent-green)' }}></span>
-          Powered by <code style={{ color: 'var(--text-ink)', background: 'var(--border-hairline)', padding: '2px 4px', borderRadius: '2px' }}>mart_airline_performance</code> &middot; 2 tests passed
-        </div>
+      <div style={{ marginBottom: '1.5rem' }}>
+        <h1>Airline Performance</h1>
+        <p>Operational reliability rankings and delay metrics across major US carriers.</p>
       </div>
       
       {contextText && (
         <ContextBanner title={contextTitle} comparisonText={contextText} trend={contextTrend} />
       )}
       
-      <div className="grid grid-cols-2" style={{ marginBottom: '1rem' }}>
+      <div className="grid grid-cols-2" style={{ marginBottom: '1.5rem' }}>
         <div className="panel">
-          <h2>Reliability Scores</h2>
+          <h2>Reliability scores (top 10)</h2>
           <ReliabilityBarChart data={airlines} />
         </div>
         <div className="panel">
-          <h2>Delay vs Cancellations</h2>
+          <h2>Delays vs cancellations</h2>
           <DelayVsCancelGroupedBar data={airlines} />
         </div>
       </div>

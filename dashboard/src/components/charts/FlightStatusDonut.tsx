@@ -1,8 +1,13 @@
 'use client';
 
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend, Label } from 'recharts';
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 
-const COLORS = ['var(--success)', 'var(--warning)', 'var(--error)', 'var(--text-muted)'];
+const STATUS_COLORS = [
+  'var(--status-ontime)',
+  'var(--status-delayed)',
+  'var(--status-cancelled)',
+  'var(--status-diverted)'
+];
 
 export default function FlightStatusDonut({ data }: { data: any[] }) {
   // Aggregate data
@@ -13,12 +18,11 @@ export default function FlightStatusDonut({ data }: { data: any[] }) {
     cancelled += Number(row.cancelled_flights || 0);
     diverted += Number(row.diverted_flights || 0);
   });
-  
+
   const onTime = total - (delayed + cancelled + diverted);
-  const onTimeRate = total > 0 ? ((onTime / total) * 100).toFixed(1) : "0.0";
 
   const chartData = [
-    { name: 'On-Time', value: onTime },
+    { name: 'On-time', value: onTime },
     { name: 'Delayed', value: delayed },
     { name: 'Cancelled', value: cancelled },
     { name: 'Diverted', value: diverted },
@@ -26,40 +30,29 @@ export default function FlightStatusDonut({ data }: { data: any[] }) {
 
   return (
     <ResponsiveContainer width="100%" height={300}>
-      <PieChart>
+      <PieChart margin={{ top: 10, right: 10, left: 10, bottom: 10 }}>
         <Pie
           data={chartData}
           cx="50%"
-          cy="50%"
-          innerRadius={60}
-          outerRadius={80}
+          cy="44%"
+          innerRadius={55}
+          outerRadius={85}
           paddingAngle={2}
           dataKey="value"
           stroke="var(--bg-panel)"
           strokeWidth={2}
         >
           {chartData.map((entry, index) => (
-            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+            <Cell key={`cell-${index}`} fill={STATUS_COLORS[index % STATUS_COLORS.length]} />
           ))}
-          <Label 
-            value={`${onTimeRate}%`} 
-            position="center" 
-            dy={-10} 
-            style={{ fontSize: '24px', fontWeight: 'bold', fill: 'var(--text-primary)' }} 
-          />
-          <Label 
-            value="On-Time" 
-            position="center" 
-            dy={15} 
-            style={{ fontSize: '14px', fill: 'var(--text-secondary)' }} 
-          />
         </Pie>
-        <Tooltip 
-          formatter={(value: number) => new Intl.NumberFormat('en-US').format(value)}
-          contentStyle={{ backgroundColor: 'var(--surface)', borderColor: 'var(--border)', borderRadius: '8px', color: 'var(--text-primary)' }}
-          itemStyle={{ color: 'var(--text-primary)' }}
+        <Tooltip
+          formatter={(value: number) => [
+            `${new Intl.NumberFormat('en-US').format(value)} (${total > 0 ? ((value / total) * 100).toFixed(1) : 0}%)`
+          ]}
+          contentStyle={{ backgroundColor: 'var(--bg-panel)', borderColor: 'var(--border-hairline)', borderRadius: '4px', color: 'var(--text-ink)', boxShadow: 'none' }}
         />
-        <Legend wrapperStyle={{ paddingTop: '20px' }} />
+        <Legend verticalAlign="bottom" wrapperStyle={{ paddingTop: '8px', fontSize: '12px' }} />
       </PieChart>
     </ResponsiveContainer>
   );

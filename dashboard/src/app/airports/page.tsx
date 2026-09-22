@@ -33,7 +33,7 @@ export default async function Airports({ searchParams }: { searchParams: { range
         const curr = agg.get(row.airport_code);
         const total_dep = Number(row.total_departures || 0);
         const total_arr = Number(row.total_arrivals || 0);
-        
+
         curr.avg_departure_delay += Number(row.avg_departure_delay || 0) * total_dep;
         curr.avg_arrival_delay += Number(row.avg_arrival_delay || 0) * total_arr;
         curr.total_departures += total_dep;
@@ -55,48 +55,64 @@ export default async function Airports({ searchParams }: { searchParams: { range
 
   return (
     <div className="container animate-fade-in">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+      {/* Header Section */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.25rem' }}>
-            <h1 style={{ marginBottom: 0 }}>Airport Operations</h1>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.25rem' }}>
+            <h1>Airport Operations</h1>
             {airport && (
-              <Link 
+              <Link
                 href={clearFilterHref}
-                style={{ 
+                style={{
                   display: 'inline-flex',
                   alignItems: 'center',
-                  gap: '0.5rem',
-                  padding: '0.25rem 0.5rem',
+                  gap: '0.375rem',
+                  padding: '0.2rem 0.5rem',
                   border: '1px solid var(--border-hairline)',
-                  borderRadius: '4px',
-                  fontSize: '0.875rem',
+                  borderRadius: '3px',
+                  fontSize: '0.8125rem',
                   color: 'var(--text-ink)',
                   backgroundColor: 'var(--bg-panel)'
                 }}
               >
-                {airport} <span style={{ color: 'var(--text-muted)' }}>×</span>
+                {airport} <span style={{ color: 'var(--text-muted)' }}>&times;</span>
               </Link>
             )}
           </div>
-          <p style={{ color: 'var(--text-muted)', margin: 0 }}>Departure and arrival metrics by airport (Top 50 by volume).</p>
-        </div>
-        <div style={{ fontSize: '12px', padding: '6px 10px', background: 'var(--bg-page)', border: '1px solid var(--border-hairline)', borderRadius: '4px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <span style={{ display: 'inline-block', width: '6px', height: '6px', borderRadius: '50%', background: 'var(--accent-green)' }}></span>
-          Powered by <code style={{ color: 'var(--text-ink)', background: 'var(--border-hairline)', padding: '2px 4px', borderRadius: '2px' }}>mart_airport_performance</code> &middot; 2 tests passed
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.9375rem' }}>
+            Departure and arrival volume and average delay offsets across US airports.
+          </p>
         </div>
       </div>
-      
-      <div className="grid grid-cols-2" style={{ marginBottom: '1rem' }}>
-        <div className="panel">
-          <h2>Busiest Airports</h2>
-          <BusiestAirportsBar data={airports} />
-        </div>
-        <div className="panel">
-          <h2>Dep Delay vs Arr Delay</h2>
+
+      {/* Visual Analytics Sections - Full Width Stacking */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', marginBottom: '2rem' }}>
+
+        {/* Full-Width Hero Scatter Plot */}
+        <div className="panel" style={{ width: '100%', padding: '1.25rem 1.5rem' }}>
+          <div style={{ marginBottom: '1rem' }}>
+            <h2 style={{ fontSize: '1.125rem', fontWeight: 600 }}>Departure vs arrival delay</h2>
+            <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', marginTop: '0.125rem' }}>
+              Operational matrix highlighting airport efficiency, delay accumulation, and en-route recovery.
+            </p>
+          </div>
           <AirportDelayScatter data={airports} />
         </div>
+
+        {/* Full-Width Volume Bar Chart */}
+        <div className="panel" style={{ width: '100%', padding: '1.25rem 1.5rem' }}>
+          <div style={{ marginBottom: '1rem' }}>
+            <h2 style={{ fontSize: '1.125rem', fontWeight: 600 }}>Busiest airports by volume</h2>
+            <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', marginTop: '0.125rem' }}>
+              Total flight departures and arrivals across primary hubs.
+            </p>
+          </div>
+          <BusiestAirportsBar data={airports} />
+        </div>
+
       </div>
-      
+
+      {/* Detailed Data Table */}
       <AirportsTable data={airports} />
     </div>
   );
