@@ -18,7 +18,14 @@ def get_db_host():
     except socket.error:
         return 'localhost'
 
-LOCAL_DB_URL = os.getenv("DATABASE_URL", f"postgresql://{os.getenv('POSTGRES_USER', 'postgres')}:{os.getenv('POSTGRES_PASSWORD', 'postgres')}@{get_db_host()}:5432/aviate_dw")
+host = os.getenv("POSTGRES_HOST") or get_db_host()
+default_port = "5432" if host == "postgres" else "5433"
+port = os.getenv("POSTGRES_PORT", default_port)
+user = os.getenv("POSTGRES_USER", "postgres")
+password = os.getenv("POSTGRES_PASSWORD", "postgres")
+db = os.getenv("POSTGRES_DB", "aviate_dw")
+
+LOCAL_DB_URL = os.getenv("DATABASE_URL", f"postgresql://{user}:{password}@{host}:{port}/{db}")
 REMOTE_DB_URL = os.getenv("SUPABASE_DB_URL")
 
 MARTS = [
@@ -63,11 +70,11 @@ def create_table_if_not_exists(remote_conn, table_name, schema):
     remote_conn.commit()
 
 def sync_mart(local_conn, remote_conn, table_name):
-    print(f"Syncing {table_name}...")
+    print(f"Syncing {table_name}...", flush=True)
     
     schema = get_table_schema(local_conn, table_name)
     if not schema:
-        print(f"Table {table_name} not found in local database. Skipping.")
+        print(f"Table {table_name} not found in local database. Skipping.", flush=True)
         return
         
     create_table_if_not_exists(remote_conn, table_name, schema)
@@ -77,17 +84,17 @@ def sync_mart(local_conn, remote_conn, table_name):
         rows = cur.fetchall()
         
     if not rows:
-        print(f"No rows found in {table_name}.")
+        print(f"No rows found in {table_name}.", flush=True)
         return
         
     with remote_conn.cursor() as cur:
         cur.execute(f"TRUNCATE TABLE {table_name};")
         cols = [col[0] for col in schema]
         query = f"INSERT INTO {table_name} ({', '.join(cols)}) VALUES %s"
-        execute_values(cur, query, rows)
+        execute_values(cur, query, rows, page_size=5000)
         
     remote_conn.commit()
-    print(f"Successfully synced {len(rows)} rows for {table_name}.")
+    print(f"Successfully synced {len(rows)} rows for {table_name}.", flush=True)
 
 def main():
     if not REMOTE_DB_URL:

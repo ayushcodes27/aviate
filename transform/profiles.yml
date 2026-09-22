@@ -6,7 +6,7 @@ aviate:
       host: "{{ env_var('POSTGRES_HOST', 'postgres') }}"
       user: "{{ env_var('POSTGRES_USER', 'postgres') }}"
       password: "{{ env_var('POSTGRES_PASSWORD', 'postgres') }}"
-      port: 5432
+      port: "{{ env_var('POSTGRES_PORT', '5432') | as_number }}"
       dbname: "{{ env_var('POSTGRES_DB', 'aviate_dw') }}"
       schema: public
       threads: 4
