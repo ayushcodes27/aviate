@@ -1,26 +1,42 @@
 :root {
-  --bg-page: #F7F8F9;
+  /* -------------------------------------------------------------
+     Aviate Design System Tokens
+     ------------------------------------------------------------- */
+  /* Base Background: cool near-white */
+  --bg-page: #F7F8FA;
   --bg-panel: #FFFFFF;
-  --border-hairline: #E4E7EB;
+  --bg-subtle: #F2F4F7;
+  --border-hairline: #E3E6EB;
+
+  /* Ink / Typography */
   --text-ink: #1A2233;
   --text-muted: #5B6472;
-  --accent-blue: #2E5AAC;
-  --accent-green: #2F7A4F;
-  --accent-amber: #B7791F;
-  --accent-red: #B23A34;
+  --text-subtle: #8C96A5;
 
-  /* Legacy mappings (so existing unrefactored components don't break during transition) */
-  --background: var(--bg-page);
+  /* Primary Data Accent: Deep Marine Indigo (deliberate instrumentation accent) */
+  --data-primary: #1E4E5F;
+  --accent-blue: #1E4E5F;
+
+  /* Status Scale (Single unified exact 3 status colors) */
+  --status-ontime: #1E7A4D;     /* On-time Green */
+  --status-delayed: #C06818;    /* Delayed Amber */
+  --status-cancelled: #BA2D28;  /* Cancelled Red */
+  --status-diverted: #7C889B;   /* Diverted Slate */
+
+  /* Semantic aliases */
+  --accent-green: var(--status-ontime);
+  --accent-amber: var(--status-delayed);
+  --accent-red: var(--status-cancelled);
+  --success: var(--status-ontime);
+  --warning: var(--status-delayed);
+  --error: var(--status-cancelled);
+  --primary: var(--data-primary);
+  --secondary: var(--text-muted);
+  --border: var(--border-hairline);
   --surface: var(--bg-panel);
   --surface-hover: var(--bg-page);
-  --primary: var(--accent-blue);
-  --secondary: var(--text-muted);
   --text-primary: var(--text-ink);
   --text-secondary: var(--text-muted);
-  --border: var(--border-hairline);
-  --success: var(--accent-green);
-  --warning: var(--accent-amber);
-  --error: var(--accent-red);
 }
 
 * {
@@ -32,9 +48,12 @@
 body {
   background-color: var(--bg-page);
   color: var(--text-ink);
-  font-family: var(--font-plex-sans), sans-serif;
+  font-family: var(--font-plex-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-feature-settings: "tnum" 1, "zero" 1;
+  font-variant-numeric: tabular-nums;
   line-height: 1.5;
   min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
 }
 
 a {
@@ -42,131 +61,197 @@ a {
   text-decoration: none;
 }
 
-/* Utilities */
+/* Hide Next.js dev indicator toast/portal */
+nextjs-portal,
+[data-nextjs-toast],
+[data-nextjs-dialog-overlay],
+div[data-nextjs-toast="true"] {
+  display: none !important;
+  visibility: hidden !important;
+}
+
+/* -------------------------------------------------------------
+   Containers (2 strict treatments: Quiet Panel & Hero KPI)
+   ------------------------------------------------------------- */
 .container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 1.5rem 2rem 2rem; /* 24px top */
+  padding: 2rem;
 }
 
-/* Panels (formerly Cards) */
-.panel, .card {
+/* 1. Quiet Panel: thin border, crisp white, NO shadow */
+.panel,
+.card {
   background: var(--bg-panel);
   border: 1px solid var(--border-hairline);
-  border-radius: 6px;
-  padding: 1rem; /* 16px internal padding */
-  box-shadow: none; /* No shadow */
-}
-
-/* Legacy hero-card override (kill gradients) */
-.hero-card {
-  background: var(--bg-panel);
-  border: 1px solid var(--border-hairline);
+  border-radius: 4px;
+  padding: 1.25rem 1.5rem;
   box-shadow: none;
+  display: flex;
+  flex-direction: column;
 }
 
-.status-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.375rem;
-  padding: 0.25rem 0.75rem;
-  background-color: #f0fdf4;
-  color: #166534;
-  border-radius: 9999px;
-  font-size: 0.75rem;
+.panel h2,
+.card h2 {
+  font-size: 0.9375rem;
   font-weight: 600;
-  border: 1px solid #bbf7d0;
+  color: var(--text-ink);
+  margin-bottom: 0.75rem;
+  letter-spacing: -0.01em;
 }
 
-/* Typography */
-h1 {
-  font-size: 1.5rem; /* 24px */
+/* 2. Hero KPI Row: no border, no chrome, whitespace-driven */
+.hero-kpi-strip {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
+  padding: 1rem 0 2rem 0;
+  border-bottom: 1px solid var(--border-hairline);
+  margin-bottom: 2rem;
+}
+
+.hero-kpi-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.hero-kpi-label {
+  font-size: 0.8125rem;
   font-weight: 500;
-  color: var(--text-primary);
+  color: var(--text-muted);
+}
+
+.hero-kpi-value {
+  font-family: var(--font-plex-mono), monospace;
+  font-size: 2.5rem;
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.hero-kpi-subtext {
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+}
+
+/* -------------------------------------------------------------
+   Typography (Sentence case everywhere, max 2-3 weights)
+   ------------------------------------------------------------- */
+h1 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text-ink);
+  letter-spacing: -0.02em;
   margin-bottom: 0.25rem;
 }
 
 h2 {
-  font-size: 1.25rem;
+  font-size: 1rem;
   font-weight: 600;
-  margin-bottom: 1rem;
+  color: var(--text-ink);
+  margin-bottom: 0.75rem;
 }
 
 p {
-  color: var(--text-secondary);
+  color: var(--text-muted);
+  font-size: 0.875rem;
 }
 
-/* Flex & Grid */
+/* -------------------------------------------------------------
+   Grids & Layout
+   ------------------------------------------------------------- */
 .grid {
   display: grid;
-  gap: 1rem; /* 16px gap between panels */
+  gap: 1.5rem;
+  align-items: stretch;
 }
 
-.grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
-.grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
-.grid-cols-4 { grid-template-columns: repeat(4, 1fr); }
-
-.flex {
-  display: flex;
+.grid-cols-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-.flex-col {
-  flex-direction: column;
+.grid-cols-3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
-.items-center {
-  align-items: center;
+.grid-cols-4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
-.justify-between {
-  justify-content: space-between;
+@media (max-width: 900px) {
+  .grid-cols-2,
+  .grid-cols-3,
+  .grid-cols-4 {
+    grid-template-columns: 1fr;
+  }
+  .hero-kpi-strip {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
 }
 
+.flex { display: flex; }
+.flex-col { flex-direction: column; }
+.items-center { align-items: center; }
+.justify-between { justify-content: space-between; }
 .gap-2 { gap: 0.5rem; }
 .gap-4 { gap: 1rem; }
 .gap-6 { gap: 1.5rem; }
 
 /* Micro-animations */
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
+  from { opacity: 0; transform: translateY(6px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
 .animate-fade-in {
-  animation: fadeIn 0.5s ease-out forwards;
+  animation: fadeIn 0.3s ease-out forwards;
 }
 
-/* Tables */
+/* -------------------------------------------------------------
+   Tables (Zebra striping, tabular numbers, sentence case)
+   ------------------------------------------------------------- */
 .table-container {
   overflow-x: auto;
-  border-radius: 8px;
-  border: 1px solid var(--border);
+  border-radius: 4px;
+  border: 1px solid var(--border-hairline);
+  background-color: var(--bg-panel);
+  box-shadow: none;
 }
 
 table {
   width: 100%;
   border-collapse: collapse;
   text-align: left;
+  font-size: 0.875rem;
 }
 
 th, td {
-  padding: 1rem;
-  border-bottom: 1px solid var(--border);
+  padding: 0.625rem 1rem;
+  border-bottom: 1px solid var(--border-hairline);
 }
 
 th {
-  background-color: rgba(0, 0, 0, 0.03);
-  font-weight: 600;
-  color: var(--text-secondary);
-  text-transform: uppercase;
+  background-color: #FAFAFB;
+  font-weight: 500;
+  color: var(--text-muted);
   font-size: 0.75rem;
-  letter-spacing: 0.05em;
+  letter-spacing: 0;
+  text-transform: none; /* No all-caps */
 }
 
-tr:last-child td {
-  border-bottom: none;
+tbody tr:nth-child(even) {
+  background-color: #FBFBFC;
 }
 
-tr:hover td {
-  background-color: rgba(0, 0, 0, 0.02);
+tbody tr:hover {
+  background-color: #F2F5F8;
+}
+
+td.numeric,
+th.numeric {
+  text-align: right;
+  font-family: var(--font-plex-mono), monospace;
+  font-variant-numeric: tabular-nums;
 }

@@ -59,15 +59,15 @@ export default function DataTable({
     });
   };
 
-  const rowPadding = density === 'compact' ? '0.375rem 1rem' : '0.75rem 1rem';
+  const rowPadding = density === 'compact' ? '0.35rem 0.875rem' : '0.625rem 1rem';
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '0.5rem' }}>
       {showSearch && data && data.length > 0 && (
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ position: 'relative', width: '300px' }}>
+          <div style={{ position: 'relative', width: '280px' }}>
             <div style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }}>
-              <Search size={16} />
+              <Search size={14} />
             </div>
             <input 
               type="text" 
@@ -76,32 +76,32 @@ export default function DataTable({
               onChange={e => setSearchTerm(e.target.value)}
               style={{
                 width: '100%',
-                padding: '0.375rem 1rem 0.375rem 2.25rem',
+                padding: '0.35rem 0.75rem 0.35rem 2rem',
                 border: '1px solid var(--border-hairline)',
                 borderRadius: '4px',
                 backgroundColor: 'var(--bg-panel)',
                 color: 'var(--text-ink)',
-                fontSize: '0.875rem',
+                fontSize: '0.8125rem',
                 outline: 'none'
               }}
             />
           </div>
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <div style={{ display: 'flex', gap: '0.375rem' }}>
             <button 
               title="Compact View"
               onClick={() => setDensity('compact')}
               style={{
                 background: density === 'compact' ? 'var(--border-hairline)' : 'transparent',
                 border: '1px solid var(--border-hairline)',
-                borderRadius: '4px',
-                padding: '4px',
+                borderRadius: '3px',
+                padding: '4px 6px',
                 cursor: 'pointer',
                 color: 'var(--text-ink)',
                 display: 'flex',
                 alignItems: 'center'
               }}
             >
-              <AlignJustify size={16} />
+              <AlignJustify size={14} />
             </button>
             <button 
               title="Comfortable View"
@@ -109,36 +109,35 @@ export default function DataTable({
               style={{
                 background: density === 'comfortable' ? 'var(--border-hairline)' : 'transparent',
                 border: '1px solid var(--border-hairline)',
-                borderRadius: '4px',
-                padding: '4px',
+                borderRadius: '3px',
+                padding: '4px 6px',
                 cursor: 'pointer',
                 color: 'var(--text-ink)',
                 display: 'flex',
                 alignItems: 'center'
               }}
             >
-              <List size={16} />
+              <List size={14} />
             </button>
           </div>
         </div>
       )}
 
-      <div className="table-container" style={{ border: '1px solid var(--border-hairline)', borderRadius: '6px', overflowX: 'auto', backgroundColor: 'var(--bg-panel)', maxHeight: '600px' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-          <thead style={{ position: 'sticky', top: 0, backgroundColor: 'var(--bg-page)', zIndex: 10 }}>
+      <div className="table-container" style={{ maxHeight: '560px' }}>
+        <table>
+          <thead style={{ position: 'sticky', top: 0, backgroundColor: '#FAFAFB', zIndex: 10 }}>
             <tr>
               {columns.map((col, idx) => (
                 <th 
                   key={idx} 
                   onClick={() => handleSort(col.accessorKey)}
                   style={{ 
-                    padding: '0.75rem 1rem', 
+                    padding: '0.625rem 1rem', 
                     borderBottom: '1px solid var(--border-hairline)',
-                    fontWeight: 600,
+                    fontWeight: 500,
                     color: 'var(--text-muted)',
                     fontSize: '0.75rem',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.05em',
+                    textTransform: 'none',
                     textAlign: col.isNumeric ? 'right' : 'left',
                     cursor: 'pointer',
                     userSelect: 'none'
@@ -168,7 +167,9 @@ export default function DataTable({
                         borderBottom: rowIdx === sortedData.length - 1 ? 'none' : '1px solid var(--border-hairline)',
                         textAlign: col.isNumeric ? 'right' : 'left',
                         fontFamily: col.isNumeric ? 'var(--font-plex-mono), monospace' : 'inherit',
-                        color: 'var(--text-ink)'
+                        fontVariantNumeric: 'tabular-nums',
+                        color: 'var(--text-ink)',
+                        fontSize: '0.8125rem'
                       }}
                     >
                       {col.render ? col.render(row) : row[col.accessorKey]}
@@ -179,7 +180,7 @@ export default function DataTable({
             ) : (
               <tr>
                 <td colSpan={columns.length} style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
-                  <div style={{ fontSize: '1rem', color: 'var(--text-ink)', marginBottom: '0.5rem' }}>No records found</div>
+                  <div style={{ fontSize: '0.9375rem', color: 'var(--text-ink)', marginBottom: '0.25rem', fontWeight: 500 }}>No records found</div>
                   {searchTerm ? 'No data matches this filter — try widening your date range or adjusting your search.' : emptyMessage}
                 </td>
               </tr>
@@ -190,7 +191,7 @@ export default function DataTable({
       
       {data && data.length > 0 && (
         <div style={{ display: 'flex', justifyContent: 'flex-end', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-          Showing {sortedData.length} of {data.length} rows
+          Showing {sortedData.length.toLocaleString()} of {data.length.toLocaleString()} rows
         </div>
       )}
     </div>
