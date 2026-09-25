@@ -32,7 +32,7 @@ export default function DelayVsCancelGroupedBar({ data }: { data: any[] }) {
         <Tooltip
           cursor={{ fill: 'var(--bg-subtle)' }}
           contentStyle={{ backgroundColor: 'var(--bg-panel)', borderColor: 'var(--border-hairline)', borderRadius: '4px', boxShadow: 'none' }}
-          formatter={(value: number) => [new Intl.NumberFormat('en-US').format(value)]}
+          formatter={(value: any) => [new Intl.NumberFormat('en-US').format(Number(value || 0))]}
         />
         <Legend verticalAlign="top" align="right" wrapperStyle={{ paddingBottom: '8px', fontSize: '12px' }} />
         <Bar dataKey="delayed" name="Delayed" fill="var(--status-delayed)" radius={[2, 2, 0, 0]} />

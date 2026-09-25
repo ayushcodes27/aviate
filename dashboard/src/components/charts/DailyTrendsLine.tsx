@@ -42,7 +42,7 @@ export default function DailyTrendsLine({ data }: { data: any[] }) {
         />
         <Tooltip 
           contentStyle={{ borderRadius: '4px', border: '1px solid var(--border-hairline)', backgroundColor: 'var(--bg-panel)', boxShadow: 'none' }}
-          formatter={(value: number, name: string) => [`${value.toFixed(1)}%`, name === 'delay_rate' ? 'Delay rate' : 'Cancellation rate']}
+          formatter={(value: any, name: any) => [`${Number(value || 0).toFixed(1)}%`, name === 'delay_rate' ? 'Delay rate' : 'Cancellation rate']}
         />
         {covidDate && (
           <ReferenceLine 

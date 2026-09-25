@@ -2,9 +2,13 @@ import argparse
 import hashlib
 import json
 import os
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
-from config import RAW_DIR, logger
+
+# Add project root to sys.path
+sys.path.append(str(Path(__file__).resolve().parent.parent))
+from ingestion.config import RAW_DIR, logger
 
 def compute_checksum(filepath: Path) -> str:
     """Computes SHA-256 checksum of a file."""

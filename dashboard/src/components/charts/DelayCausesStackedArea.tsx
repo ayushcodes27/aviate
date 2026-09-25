@@ -68,7 +68,7 @@ export default function DelayCausesStackedArea({ data }: { data: any[] }) {
             }
             return label;
           }}
-          formatter={(value: number) => [`${new Intl.NumberFormat('en-US').format(value)} min`]}
+          formatter={(value: any) => [`${new Intl.NumberFormat('en-US').format(Number(value || 0))} min`]}
         />
         <Legend verticalAlign="top" align="right" wrapperStyle={{ paddingBottom: '12px', fontSize: '12px' }} />
         <Area type="monotone" dataKey="late_aircraft" stackId="1" name="Late aircraft" stroke="#7C5AC2" fill="#7C5AC2" fillOpacity={0.8} />

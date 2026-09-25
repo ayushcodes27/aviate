@@ -47,8 +47,8 @@ export default function FlightStatusDonut({ data }: { data: any[] }) {
           ))}
         </Pie>
         <Tooltip
-          formatter={(value: number) => [
-            `${new Intl.NumberFormat('en-US').format(value)} (${total > 0 ? ((value / total) * 100).toFixed(1) : 0}%)`
+          formatter={(value: any) => [
+            `${new Intl.NumberFormat('en-US').format(Number(value || 0))} (${total > 0 ? ((Number(value || 0) / total) * 100).toFixed(1) : 0}%)`
           ]}
           contentStyle={{ backgroundColor: 'var(--bg-panel)', borderColor: 'var(--border-hairline)', borderRadius: '4px', color: 'var(--text-ink)', boxShadow: 'none' }}
         />

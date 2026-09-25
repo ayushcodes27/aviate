@@ -3,7 +3,7 @@ x-airflow-common: &airflow-common
     context: .
     dockerfile: Dockerfile.airflow
   environment:
-    - _PIP_ADDITIONAL_REQUIREMENTS=pyspark==3.5.2 dbt-postgres>=1.7.0 psycopg2-binary>=2.9.9
+    - _PIP_ADDITIONAL_REQUIREMENTS=duckdb>=1.0.0 dbt-postgres>=1.7.0 psycopg2-binary>=2.9.9 pandas>=2.0.0
     - AIRFLOW__CORE__EXECUTOR=LocalExecutor
     - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${AIRFLOW_DB:-airflow}
     - AIRFLOW__CORE__FERNET_KEY=${AIRFLOW__CORE__FERNET_KEY:-46BKJoQYlPPOexq0OhDZnIlNepKFf87WFwLbfzqJZq0=}
@@ -45,45 +45,6 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
-    networks:
-      - aviate_network
-
-  # -------------------------------------------------------------
-  # Apache Spark (Official Image: Master + Worker)
-  # -------------------------------------------------------------
-  spark-master:
-    image: apache/spark:3.5.2
-    container_name: aviate_spark_master
-    hostname: spark-master
-    environment:
-      - SPARK_MASTER_PORT=7077
-      - SPARK_MASTER_WEBUI_PORT=8080
-      - POSTGRES_HOST=postgres
-    command: /opt/spark/bin/spark-class org.apache.spark.deploy.master.Master
-    ports:
-      - "8081:8080"   # Spark Master Web UI
-      - "7077:7077"   # Spark Master Port
-    volumes:
-      - ./processing:/opt/spark/work-dir/processing
-      - ./data:/opt/spark/work-dir/data
-      - ./ingestion:/opt/spark/work-dir/ingestion
-    networks:
-      - aviate_network
-
-  spark-worker:
-    image: apache/spark:3.5.2
-    container_name: aviate_spark_worker
-    depends_on:
-      - spark-master
-    command: /opt/spark/bin/spark-class org.apache.spark.deploy.worker.Worker spark://spark-master:7077
-    environment:
-      - SPARK_WORKER_CORES=2
-      - SPARK_WORKER_MEMORY=2g
-      - POSTGRES_HOST=postgres
-    volumes:
-      - ./processing:/opt/spark/work-dir/processing
-      - ./data:/opt/spark/work-dir/data
-      - ./ingestion:/opt/spark/work-dir/ingestion
     networks:
       - aviate_network
 

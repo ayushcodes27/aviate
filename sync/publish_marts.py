@@ -1,15 +1,14 @@
 import os
 import sys
+import socket
 import psycopg2
 from psycopg2.extras import execute_values
 from dotenv import load_dotenv
-
 from pathlib import Path
+
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
 load_dotenv()
-
-import socket
 
 def get_db_host():
     try:
@@ -19,7 +18,7 @@ def get_db_host():
         return 'localhost'
 
 host = os.getenv("POSTGRES_HOST") or get_db_host()
-default_port = "5432" if host == "postgres" else "5433"
+default_port = "5432" if host == "postgres" else "5434"
 port = os.getenv("POSTGRES_PORT", default_port)
 user = os.getenv("POSTGRES_USER", "postgres")
 password = os.getenv("POSTGRES_PASSWORD", "postgres")
@@ -67,6 +66,10 @@ def create_table_if_not_exists(remote_conn, table_name, schema):
     query = f"CREATE TABLE IF NOT EXISTS {table_name} ({', '.join(columns)});"
     with remote_conn.cursor() as cur:
         cur.execute(query)
+        # Ensure any new columns in local schema exist in remote table
+        for col_name, data_type in schema:
+            pg_type = type_map.get(data_type, 'TEXT')
+            cur.execute(f"ALTER TABLE {table_name} ADD COLUMN IF NOT EXISTS {col_name} {pg_type};")
     remote_conn.commit()
 
 def sync_mart(local_conn, remote_conn, table_name):

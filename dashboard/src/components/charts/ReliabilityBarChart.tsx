@@ -37,7 +37,7 @@ export default function ReliabilityBarChart({ data }: { data: any[] }) {
         <Tooltip 
           cursor={{ fill: 'var(--bg-subtle)' }}
           contentStyle={{ backgroundColor: 'var(--bg-panel)', borderColor: 'var(--border-hairline)', borderRadius: '4px', boxShadow: 'none' }}
-          formatter={(value: number) => [`${value.toFixed(1)}%`, 'Reliability score']}
+          formatter={(value: any) => [`${Number(value || 0).toFixed(1)}%`, 'Reliability score']}
           labelFormatter={(_, payload) => {
             const item = payload?.[0]?.payload;
             return item ? `${item.carrier} (Rank #${item.rank})` : '';

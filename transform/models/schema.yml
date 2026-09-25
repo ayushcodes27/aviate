@@ -18,14 +18,26 @@ models:
 
   - name: mart_airline_performance
     columns:
-      - name: carrier
+      - name: airline_month_key
         tests:
           - unique
+          - not_null
+      - name: carrier
+        tests:
+          - not_null
+      - name: flight_month
+        tests:
           - not_null
 
   - name: mart_airport_performance
     columns:
-      - name: airport_code
+      - name: airport_month_key
         tests:
           - unique
+          - not_null
+      - name: airport_code
+        tests:
+          - not_null
+      - name: flight_month
+        tests:
           - not_null

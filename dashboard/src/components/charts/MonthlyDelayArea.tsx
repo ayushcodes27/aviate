@@ -61,7 +61,7 @@ export default function MonthlyDelayArea({ data }: { data: any[] }) {
             }
             return label;
           }}
-          formatter={(value: number) => new Intl.NumberFormat('en-US').format(value)}
+          formatter={(value: any) => new Intl.NumberFormat('en-US').format(Number(value || 0))}
         />
         {hasCovid && (
           <ReferenceLine 

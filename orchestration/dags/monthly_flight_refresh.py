@@ -15,7 +15,7 @@ default_args = {
 with DAG(
     'monthly_flight_refresh',
     default_args=default_args,
-    description='Monthly refresh of BTS flight data',
+    description='Monthly refresh of BTS flight data via DuckDB and dbt',
     schedule_interval='@monthly',
     start_date=datetime(2023, 1, 1),
     catchup=False,
@@ -27,14 +27,14 @@ with DAG(
 
     start = EmptyOperator(task_id='start')
 
-    download_data = BashOperator(
-        task_id='download_bts_data',
-        bash_command='python /opt/airflow/ingestion/download_bts.py --file {{ params.filename }} --period {{ params.period }}'
+    register_data = BashOperator(
+        task_id='register_bts_data',
+        bash_command='python /opt/airflow/ingestion/register_bts.py --file {{ params.filename }} --period {{ params.period }}'
     )
 
-    spark_process = BashOperator(
-        task_id='spark_process',
-        bash_command='python /opt/airflow/processing/spark_flights.py --file {{ params.filename }} --period {{ params.period }}'
+    duckdb_process = BashOperator(
+        task_id='duckdb_process',
+        bash_command='python /opt/airflow/processing/duckdb_flights.py --file {{ params.filename }} --period {{ params.period }}'
     )
 
     dbt_build = BashOperator(
@@ -50,4 +50,4 @@ with DAG(
 
     end = EmptyOperator(task_id='end')
 
-    start >> download_data >> spark_process >> dbt_build >> publish_marts >> end
+    start >> register_data >> duckdb_process >> dbt_build >> publish_marts >> end

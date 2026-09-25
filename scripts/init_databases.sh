@@ -33,22 +33,6 @@ function initialize_aviate_schema() {
             late_aircraft_delay INTEGER,
             _ingested_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
-
-        CREATE TABLE IF NOT EXISTS raw_airport_lookup (
-            code TEXT PRIMARY KEY,
-            description TEXT
-        );
-
-        CREATE TABLE IF NOT EXISTS ingestion_runs (
-            id SERIAL PRIMARY KEY,
-            filename TEXT NOT NULL,
-            period TEXT NOT NULL,
-            checksum TEXT,
-            row_count INTEGER,
-            status TEXT,
-            started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            completed_at TIMESTAMP
-        );
 EOSQL
 }
 

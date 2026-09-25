@@ -12,7 +12,7 @@ default_args = {
     'retry_delay': timedelta(minutes=5),
 }
 
-# Define a dictionary or list of historical periods and files
+# Define historical periods and files
 BACKFILL_PERIODS = {
     "2023-Q1": "flights_sample_3m.csv"
 }
@@ -20,7 +20,7 @@ BACKFILL_PERIODS = {
 with DAG(
     'historical_backfill',
     default_args=default_args,
-    description='Backfill historical BTS flight data',
+    description='Backfill historical BTS flight data via DuckDB and dbt',
     schedule_interval=None,
     start_date=datetime(2023, 1, 1),
     catchup=False,
@@ -38,27 +38,27 @@ with DAG(
 
     dbt_build = BashOperator(
         task_id='dbt_build_all',
-        bash_command='cd /opt/airflow/transform && /home/airflow/.local/bin/dbt build --profiles-dir /opt/airflow/transform',
+        bash_command='cd /opt/airflow/transform && dbt build --profiles-dir /opt/airflow/transform',
         env=PG_ENV,
         append_env=True,
     )
 
     for period, filename in BACKFILL_PERIODS.items():
-        download_data = BashOperator(
-            task_id=f'download_bts_data_{period}',
-            bash_command=f'python /opt/airflow/ingestion/download_bts.py --file {filename} --period {period}',
+        register_data = BashOperator(
+            task_id=f'register_bts_data_{period}',
+            bash_command=f'python /opt/airflow/ingestion/register_bts.py --file {filename} --period {period}',
             env=PG_ENV,
             append_env=True,
         )
 
-        spark_process = BashOperator(
-            task_id=f'spark_process_{period}',
-            bash_command=f'python /opt/airflow/processing/spark_flights.py --file {filename} --period {period}',
+        duckdb_process = BashOperator(
+            task_id=f'duckdb_process_{period}',
+            bash_command=f'python /opt/airflow/processing/duckdb_flights.py --file {filename} --period {period}',
             env=PG_ENV,
             append_env=True,
         )
 
-        start >> download_data >> spark_process >> dbt_build
+        start >> register_data >> duckdb_process >> dbt_build
     
     publish_marts = BashOperator(
         task_id='publish_marts',
