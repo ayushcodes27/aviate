@@ -56,6 +56,11 @@ Time-series tracking of daily delay patterns alongside a categorical breakdown o
 
 ##  Architecture & Data Pipeline
 
+![Aviate Architecture](archi.png)
+
+<details>
+<summary>Click to view ASCII Pipeline Diagram</summary>
+
 ```
 ┌─────────────────────────┐
 │ Bureau of Transportation│
@@ -101,6 +106,7 @@ Time-series tracking of daily delay patterns alongside a categorical breakdown o
 │       (Dashboard)       │      Tokens & Tabular Numerals
 └─────────────────────────┘
 ```
+</details>
 
 ---
 
